@@ -1,0 +1,168 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'com.bmuschko.nexus'
+apply plugin: 'jacoco'
+
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+    }
+}
+
+// --- JAVADOC ---
+
+javadoc {
+	options.encoding = 'UTF-8'
+	failOnError = false
+}
+
+// --- JACOCO ---
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled true
+    } 
+}
+
+// --- CONFIGURATIONS ---
+
+configurations {
+    runtime
+    ecj
+}
+
+configurations.all {
+    // resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+// --- REPOSITORIES ---
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+}
+
+// --- DEPENDENCIES ---
+
+dependencies {
+
+    // ============== COMPILATION =============
+    
+    testCompile 'junit:junit:4.12'
+	ecj 'org.eclipse.jdt.core.compiler:ecj:4.4.2'
+	
+    // ============== PROMISE API =============
+
+	// https://mvnrepository.com/artifact/com.github.berkesa/datatree-promise
+	compile group: 'com.github.berkesa', name: 'datatree-promise', version: '1.0.6'
+	    
+    // ================ LOGGING ===============
+	
+	// http://mvnrepository.com/artifact/org.slf4j/slf4j-api
+	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.28'
+       
+	// http://mvnrepository.com/artifact/org.slf4j/slf4j-jdk14
+	compile group: 'org.slf4j', name: 'slf4j-jdk14', version: '1.7.28'
+
+	// https://mvnrepository.com/artifact/org.slf4j/log4j-over-slf4j
+	compile group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.28'
+
+	// https://mvnrepository.com/artifact/org.slf4j/jcl-over-slf4j
+	compile group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.28'
+   
+    // ============== MONGODB API ==============
+    
+	// https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-async
+	compile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.11.0'
+ 
+ 	// =========== SPRING FRAMEWORK ============
+	 
+	// https://mvnrepository.com/artifact/org.springframework/spring-core
+	compile group: 'org.springframework', name: 'spring-context', version: '5.0.8.RELEASE'
+	   
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group = 'com.github.berkesa'
+
+version = '1.0.0-SNAPSHOT'
+// version = '1.0.0'
+
+modifyPom {
+    project {
+        artifactId 'moleculer-java-mongo'
+        name 'MongoDB Client for Moleculer Framework'
+        description 'Non-blocking, Promise-based MongoDB Client for Moleculer Applications.'
+        url 'https://moleculer-java.github.io/moleculer-java-mongo/'
+        inceptionYear '2019'
+
+        scm {
+            url 'https://moleculer-java.github.io/moleculer-java-mongo/'
+            connection 'scm:https://github.com/moleculer-java/moleculer-java-mongo.git'
+            developerConnection 'scm:git://github.com/moleculer-java/moleculer-java-mongo.git'
+        }
+
+        licenses {
+            license {
+                name "The MIT License"
+                url "http://www.opensource.org/licenses/MIT"
+                distribution 'repo'
+            }
+        }
+        
+        dependencies {
+            dependency {
+                groupId 'com.github.berkesa'
+                artifactId 'datatree-promise'
+                version '1.0.6'
+                scope 'runtime'
+            }
+            dependency {
+                groupId 'org.mongodb'
+                artifactId 'mongodb-driver-async'
+                version '3.11.0'
+                scope 'runtime'
+            }
+        }
+
+        developers {
+            developer {
+                id 'berkesa'
+                name 'Andras Berkes'
+                email 'andras.berkes@programmer.net'
+            }
+        }
+    }
+}
+
+nexus {
+    sign = true
+    repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+	snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+}
+
+// --- COMPILATION ---
+
+compileJava {
+	options.fork = true
+	options.forkOptions.with {
+		executable = 'java'
+		jvmArgs = ['-classpath', project.configurations.ecj.asPath, 'org.eclipse.jdt.internal.compiler.batch.Main', '-nowarn']
+	}
+}
+
+// --- JAR ---
+
+jar {
+    baseName = 'moleculer-mongo'
+    version =  '1.0.0'
+}
