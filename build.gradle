@@ -79,8 +79,8 @@ dependencies {
    
     // ============== MONGODB API ==============
     
-	// https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-async
-	compile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.11.0'
+	// https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-reactivestreams
+	compile group: 'org.mongodb', name: 'mongodb-driver-reactivestreams', version: '1.12.0'
  
  	// =========== SPRING FRAMEWORK ============
 	 

@@ -27,36 +27,40 @@ package services.moleculer.mongo;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
-import com.mongodb.async.AsyncBatchCursor;
-import com.mongodb.async.SingleResultCallback;
-import com.mongodb.async.client.FindIterable;
-import com.mongodb.async.client.MongoIterable;
+import com.mongodb.client.model.CountOptions;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.DropIndexOptions;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.InsertOneOptions;
+import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.TextSearchOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import com.mongodb.reactivestreams.client.FindPublisher;
+import com.mongodb.reactivestreams.client.MongoCollection;
 
 import io.datatree.Promise;
-import io.datatree.Resolver;
 import io.datatree.Tree;
 
 public class MongoDAO {
 
-	// --- CONSTANTS ---
-
-	// Max number of retrieved rows
-	public static final int MAX_ITEMS_PER_QUERY = 1024 * 4;
+	// --- FIELD NAME CONSTANTS ---
 
 	// Root node of rows
 	public static final String ROWS = "rows";
@@ -67,11 +71,26 @@ public class MongoDAO {
 	// Set function
 	public static final String SET = "$set";
 
+	// ObjectID
 	public static final String ID = "_id";
+
+	// Number of matched rows
+	public static final String MATCHED = "matched";
+
+	// Number of modified rows
+	public static final String MODIFIED = "modified";
+
+	// Number of deleted rows
+	public static final String DELETED = "deleted";
+
+	// True if the write was acknowledged
+	public static final String ACKNOWLEDGED = "acknowledged";
 
 	// --- COLLECTION OF THIS DAO ---
 
-	protected com.mongodb.async.client.MongoCollection<Document> collection;
+	protected MongoCollection<Document> collection;
+
+	protected int maxItemsPerQuery = 1024 * 10;
 
 	// --- GET CONNECTION AND COLLECTION ---
 
@@ -80,8 +99,9 @@ public class MongoDAO {
 		// Set collection by the @MongoCollection annotation
 		// Eg. @MongoCollection("users")
 		Class<? extends MongoDAO> c = getClass();
-		if (c.isAnnotationPresent(MongoCollection.class)) {
-			MongoCollection annotation = c.getAnnotation(MongoCollection.class);
+		if (c.isAnnotationPresent(services.moleculer.mongo.MongoCollection.class)) {
+			services.moleculer.mongo.MongoCollection annotation = c
+					.getAnnotation(services.moleculer.mongo.MongoCollection.class);
 			String collectionName = annotation.value();
 			if (collectionName != null) {
 				collectionName = collectionName.trim();
@@ -106,442 +126,352 @@ public class MongoDAO {
 
 	// --- DROP COLLECTION ---
 
-	public Promise drop() {
-		return new Promise(res -> {
-			collection.drop(toCallback(res));
-		});
+	protected Promise drop() {
+		return singleResult(collection.drop());
 	}
 
 	// --- CREATE INDEX(ES) ---
 
-	public Promise createAscendingIndexes(String... fieldNames) {
+	protected Promise createAscendingIndexes(String... fieldNames) {
 		return createIndexes(Indexes.ascending(fieldNames));
 	}
 
-	public Promise createDescendingIndexes(String... fieldNames) {
+	protected Promise createDescendingIndexes(String... fieldNames) {
 		return createIndexes(Indexes.descending(fieldNames));
 	}
 
-	public Promise createGeo2DSphereIndexes(String... fieldNames) {
+	protected Promise createGeo2DSphereIndexes(String... fieldNames) {
 		return createIndexes(Indexes.geo2dsphere(fieldNames));
 	}
 
-	public Promise createIndexes(Tree indexes) {
+	protected Promise createIndexes(Tree indexes) {
 		return createIndexes(toBson(indexes));
 	}
 
 	protected Promise createIndexes(Bson key) {
-		return new Promise(res -> {
-			collection.createIndex(key, toCallback(res));
-		});
+		return singleResult(collection.createIndex(key));
 	}
 
 	// --- LIST INDEXES ---
 
-	public Promise listIndexes() {
-		return new Promise(res -> {
-			collectAll(collection.listIndexes(), res);
-		});
+	protected Promise listIndexes() {
+		return collectAll(collection.listIndexes());
 	}
 
 	// --- DROP INDEX ---
 
-	public Promise dropIndex(String indexName) {
-		return new Promise(res -> {
-			collection.dropIndex(indexName, toCallback(res));
-		});
+	protected Promise dropIndex(String indexName) {
+		return singleResult(collection.dropIndex(indexName));
+	}
+
+	protected Promise dropIndex(String indexName, DropIndexOptions options) {
+		return singleResult(collection.dropIndex(indexName, options));
 	}
 
 	// --- INSERT ONE ---
 
-	public Promise insertOne(Tree record) {
-		return insertOne(record, null);
+	protected Promise insertOne(Tree record) {
+		Document doc = (Document) toBson(record);
+		return singleResult(collection.insertOne(doc)).then(in -> {
+			return doc;
+		});
 	}
 
-	public Promise insertOne(Tree record, InsertOneOptions options) {
+	protected Promise insertOne(Tree record, InsertOneOptions options) {
 		Document doc = (Document) toBson(record);
-		return new Promise(res -> {
-			if (options == null) {
-				collection.insertOne(doc, toCallback(res));
-			} else {
-				collection.insertOne(doc, options, toCallback(res));
-			}
-		}).then(in -> {
-			ObjectId id = (ObjectId) doc.get(ID);
-			if (id == null) {
-				return null;
-			}
-			return id.toHexString();
+		return singleResult(collection.insertOne(doc, options)).then(in -> {
+			return doc;
 		});
 	}
 
 	// --- REPLACE ONE ---
 
-	public Promise replaceOne(Tree record, Tree filter) {
-		return new Promise(res -> {
-			collection.replaceOne(toBson(filter), (Document) toBson(record), toCallback(res));
-		}).then(res -> {
-			UpdateResult result = (UpdateResult) res.asObject();
-			return result.getModifiedCount() > 0;
+	protected Promise replaceOne(Tree record, Tree filter) {
+		return singleResult(collection.replaceOne(toBson(filter), (Document) toBson(record))).thenWithResult(res -> {
+			return updateResultToTree(res);
 		});
+	}
+
+	protected Promise replaceOne(Tree record, Tree filter, ReplaceOptions options) {
+		return singleResult(collection.replaceOne(toBson(filter), (Document) toBson(record), options))
+				.thenWithResult(res -> {
+					return updateResultToTree(res);
+				});
 	}
 
 	// --- UPDATE ONE ---
 
-	public Promise updateOne(Tree record, Tree filter) {
-		return new Promise(res -> {
-			Tree set = new Tree();
-			set.putMap(SET).copyFrom(record);
-			collection.updateOne(toBson(filter), toBson(set), toCallback(res));
-		}).then(res -> {
-			UpdateResult result = (UpdateResult) res.asObject();
-			return result.getModifiedCount() > 0;
+	protected Promise updateOne(Tree record, Tree filter) {
+		Tree rec = prepareForUpdate(record);
+		return singleResult(collection.updateOne(toBson(filter), toBson(rec))).thenWithResult(res -> {
+			return updateResultToTree(res);
 		});
 	}
 
 	// --- UPDATE MANY ---
 
-	public Promise updateMany(Tree record, Tree filter) {
-		return new Promise(res -> {
-			Tree set = new Tree();
-			set.putMap(SET).copyFrom(record);
-			collection.updateMany(toBson(filter), toBson(set), toCallback(res));
-		}).then(res -> {
-			UpdateResult result = (UpdateResult) res.asObject();
-			return result.getModifiedCount();
+	protected Promise updateMany(Tree record, Tree filter) {
+		Tree rec = prepareForUpdate(record);
+		return singleResult(collection.updateMany(toBson(filter), toBson(rec))).thenWithResult(res -> {
+			return updateResultToTree(res);
 		});
 	}
 
 	// --- DELETE ONE ---
 
-	public Promise deleteOne(Tree filter) {
-		return new Promise(res -> {
-			collection.deleteOne(toBson(filter), toCallback(res));
-		}).then(res -> {
-			DeleteResult result = (DeleteResult) res.asObject();
-			return result.getDeletedCount() > 0;
+	protected Promise deleteOne(Tree filter) {
+		return singleResult(collection.deleteOne(toBson(filter))).thenWithResult(res -> {
+			return deleteResultToTree(res);
+		});
+	}
+
+	protected Promise deleteOne(Tree filter, DeleteOptions options) {
+		return singleResult(collection.deleteOne(toBson(filter), options)).thenWithResult(res -> {
+			return deleteResultToTree(res);
 		});
 	}
 
 	// --- DELETE MANY ---
 
-	public Promise deleteMany(Tree filter) {
-		return new Promise(res -> {
-			collection.deleteMany(toBson(filter), toCallback(res));
-		}).then(res -> {
-			DeleteResult result = (DeleteResult) res.asObject();
-			return result.getDeletedCount();
+	protected Promise deleteMany(Tree filter) {
+		return singleResult(collection.deleteMany(toBson(filter))).thenWithResult(res -> {
+			return deleteResultToTree(res);
+		});
+	}
+
+	protected Promise deleteMany(Tree filter, DeleteOptions options) {
+		return singleResult(collection.deleteMany(toBson(filter), options)).thenWithResult(res -> {
+			return deleteResultToTree(res);
 		});
 	}
 
 	// --- COUNTS ---
 
-	public Promise count() {
-		return new Promise(res -> {
-			collection.count(toCallback(res));
-		});
+	protected Promise count() {
+		return singleResult(collection.countDocuments());
 	}
 
-	public Promise count(Tree filter) {
-		return new Promise(res -> {
-			collection.count(toBson(filter), toCallback(res));
-		});
+	protected Promise count(Tree filter) {
+		return singleResult(collection.countDocuments(toBson(filter)));
+	}
+
+	protected Promise count(Tree filter, CountOptions options) {
+		return singleResult(collection.countDocuments(toBson(filter), options));
 	}
 
 	// --- FIND ONE ---
 
-	public Promise findOne(Tree filter) {
-		return new Promise(res -> {
-			FindIterable<Document> find = collection.find();
-			if (filter != null) {
-				find.filter(toBson(filter));
-			}
-			find.batchSize(1);
-			find.first(toCallback(res));
-		});
+	protected Promise findOne(Tree filter) {
+		FindPublisher<Document> find = collection.find();
+		if (filter != null) {
+			find.filter(toBson(filter));
+		}
+		find.batchSize(1);
+		return singleResult(find.first());
 	}
 
 	// --- FIND MANY ---
 
-	public Promise find(Tree filter, Tree sort, int first, int limit) {
-		return new Promise(res -> {
+	protected Promise find(Tree filter, Tree sort, int first, int limit) {
 
-			// Set query limit
-			final int l;
-			if (limit < 1 || limit > MAX_ITEMS_PER_QUERY) {
-				l = MAX_ITEMS_PER_QUERY;
-			} else {
-				l = limit;
+		// Set query limit
+		final int l;
+		if (limit < 1 || limit > maxItemsPerQuery) {
+			l = maxItemsPerQuery;
+		} else {
+			l = limit;
+		}
+
+		// Find
+		FindPublisher<Document> find = collection.find();
+		Bson countFilter = filter == null ? null : toBson(filter);
+		if (filter != null) {
+			find.filter(countFilter);
+		}
+		if (sort != null) {
+			find.sort(toBson(sort));
+		}
+		if (first > 0) {
+			find.skip(first);
+		}
+		find.batchSize(Math.min(l, 50));
+		find.limit(l);
+
+		// Get rows and size
+		return collectAll(find).then(rows -> {
+			if (countFilter == null) {
+				return singleResult(collection.countDocuments()).thenWithResult(max -> {
+					rows.put(COUNT, max);
+					return rows;
+				});
 			}
-
-			// Find
-			FindIterable<Document> find = collection.find();
-			Bson bsonFilter = null;
-			if (filter != null) {
-				bsonFilter = toBson(filter);
-				find.filter(bsonFilter);
-			}
-			final Bson finalBsonFilter = bsonFilter;
-			if (sort != null) {
-				find.sort(toBson(sort));
-			}
-			if (first > 0) {
-				find.skip(first);
-			}
-			find.batchSize(Math.min(l, 50));
-			find.limit(l);
-
-			// Invoke callback
-			LinkedList<Document> list = new LinkedList<Document>();
-			final SingleResultCallback<Long> lastStep = new SingleResultCallback<Long>() {
-
-				@Override
-				public final void onResult(Long result, Throwable cause) {
-					if (cause != null) {
-						res.reject(cause);
-					} else {
-						Tree doc = new Tree();
-						doc.put(COUNT, result);
-						doc.putObject(ROWS, list);
-						res.resolve(doc);
-					}
-				}
-
-			};
-
-			// Read list
-			find.forEach(document -> {
-				if (document != null) {
-					list.addLast(document);
-				}
-			}, (result, t) -> {
-
-				// Get max record number
-				if (finalBsonFilter == null) {
-					collection.count(lastStep);
-				} else {
-					collection.count(finalBsonFilter, lastStep);
-				}
-
+			return singleResult(collection.countDocuments(countFilter)).thenWithResult(max -> {
+				rows.put(COUNT, max);
+				return rows;
 			});
 		});
 	}
 
 	// --- FIND ONE AND DELETE ---
 
-	public Promise findOneAndDelete(Tree filter) {
-		return new Promise(res -> {
-			collection.findOneAndDelete(toBson(filter), toCallback(res));
-		});
+	protected Promise findOneAndDelete(Tree filter) {
+		return singleResult(collection.findOneAndDelete(toBson(filter)));
+	}
+
+	protected Promise findOneAndDelete(Tree filter, FindOneAndDeleteOptions options) {
+		return singleResult(collection.findOneAndDelete(toBson(filter), options));
 	}
 
 	// --- FIND ONE AND REPLACE ---
 
-	public Promise findOneAndReplace(Tree filter, Tree replacement) {
-		return new Promise(res -> {
-			collection.findOneAndReplace(toBson(filter), (Document) toBson(replacement), toCallback(res));
-		});
+	protected Promise findOneAndReplace(Tree filter, Tree replacement) {
+		return singleResult(collection.findOneAndReplace(toBson(filter), (Document) toBson(replacement)));
+	}
+
+	protected Promise findOneAndReplace(Tree filter, Tree replacement, FindOneAndReplaceOptions options) {
+		return singleResult(collection.findOneAndReplace(toBson(filter), (Document) toBson(replacement), options));
 	}
 
 	// --- FIND ONE AND UPDATE ---
 
-	public Promise findOneAndUpdate(Tree filter, Tree update) {
-		return new Promise(res -> {
-			collection.findOneAndUpdate(toBson(filter), toBson(update), toCallback(res));
-		});
+	protected Promise findOneAndUpdate(Tree filter, Tree update) {
+		return singleResult(collection.findOneAndUpdate(toBson(filter), (Document) toBson(update)));
+	}
+
+	protected Promise findOneAndUpdate(Tree filter, Tree update, FindOneAndUpdateOptions options) {
+		return singleResult(collection.findOneAndUpdate(toBson(filter), (Document) toBson(update), options));
 	}
 
 	// --- MAP/REDUCE ---
 
-	public Promise mapReduce(String mapFunction, String reduceFunction, Consumer<Tree> rowHandler) {
-		return new Promise(res -> {
-			callOnEach(collection.mapReduce(mapFunction, reduceFunction), res, rowHandler);
-		});
+	protected Promise mapReduce(String mapFunction, String reduceFunction) {
+		return collectAll(collection.mapReduce(mapFunction, reduceFunction));
 	}
-
-	public Promise mapReduce(String mapFunction, String reduceFunction) {
+	
+	protected Promise mapReduce(String mapFunction, String reduceFunction, Consumer<Tree> rowHandler) {
 		return new Promise(res -> {
-			collectAll(collection.mapReduce(mapFunction, reduceFunction), res);
+			collection.mapReduce(mapFunction, reduceFunction).subscribe(new Subscriber<Document>() {
+
+				AtomicLong counter = new AtomicLong();
+
+				@Override
+				public void onSubscribe(Subscription s) {
+
+					// Do nothing
+				}
+
+				@Override
+				public void onNext(Document t) {
+					rowHandler.accept(new Tree(t));
+					counter.incrementAndGet();
+				}
+
+				@Override
+				public void onError(Throwable t) {
+					res.reject(t);
+				}
+
+				@Override
+				public void onComplete() {
+					res.resolve(counter.get());
+				}
+
+			});
 		});
 	}
 
 	// --- LOGICAL OPERATORS FOR FILTERS ---
 
-	public Tree or(Tree... filters) {
+	protected Tree or(Tree... filters) {
 		return new BsonTree(Filters.or(toBsonIterable(filters)));
 	}
 
-	public Tree and(Tree... filters) {
+	protected Tree and(Tree... filters) {
 		return new BsonTree(Filters.and(toBsonIterable(filters)));
 	}
 
-	public Tree not(Tree filter) {
+	protected Tree not(Tree filter) {
 		return new BsonTree(Filters.not(toBson(filter)));
 	}
 
-	public Tree eq(String id) {
+	protected Tree eq(String id) {
 		return new BsonTree(Filters.eq(ID, new ObjectId(id)));
 	}
 
-	public Tree eq(String fieldName, Object value) {
+	protected Tree eq(String fieldName, Object value) {
 		return new BsonTree(Filters.eq(fieldName, toObject(value)));
 	}
 
-	public Tree ne(String fieldName, Object value) {
+	protected Tree ne(String fieldName, Object value) {
 		return new BsonTree(Filters.ne(fieldName, toObject(value)));
 	}
 
-	public Tree in(String fieldName, Object... values) {
+	protected Tree in(String fieldName, Object... values) {
 		return new BsonTree(Filters.in(fieldName, toObjectIterable(values)));
 	}
 
-	public Tree nin(String fieldName, Object... values) {
+	protected Tree nin(String fieldName, Object... values) {
 		return new BsonTree(Filters.nin(fieldName, toObjectIterable(values)));
 	}
 
-	public Tree lt(String fieldName, Object value) {
+	protected Tree lt(String fieldName, Object value) {
 		return new BsonTree(Filters.lt(fieldName, toObject(value)));
 	}
 
-	public Tree lte(String fieldName, Object value) {
+	protected Tree lte(String fieldName, Object value) {
 		return new BsonTree(Filters.lte(fieldName, toObject(value)));
 	}
 
-	public Tree gt(String fieldName, Object value) {
+	protected Tree gt(String fieldName, Object value) {
 		return new BsonTree(Filters.gt(fieldName, toObject(value)));
 	}
 
-	public Tree gte(String fieldName, Object value) {
+	protected Tree gte(String fieldName, Object value) {
 		return new BsonTree(Filters.gte(fieldName, toObject(value)));
 	}
 
-	public Tree exists(String fieldName) {
+	protected Tree exists(String fieldName) {
 		return new BsonTree(Filters.exists(fieldName, true));
 	}
 
-	public Tree notExists(String fieldName) {
+	protected Tree notExists(String fieldName) {
 		return new BsonTree(Filters.exists(fieldName, false));
 	}
 
-	public Tree regex(String fieldName, String pattern) {
+	protected Tree regex(String fieldName, String pattern) {
 		return new BsonTree(Filters.regex(fieldName, pattern));
 	}
 
-	public Tree where(String javaScriptExpression) {
+	protected Tree where(String javaScriptExpression) {
 		return new BsonTree(Filters.where(javaScriptExpression));
 	}
 
-	public Tree elemMatch(String fieldName, Tree filter) {
+	protected Tree elemMatch(String fieldName, Tree filter) {
 		return new BsonTree(Filters.elemMatch(fieldName, toBson(filter)));
 	}
 
-	public Tree elemMatch(Tree expression) {
+	protected Tree elemMatch(Tree expression) {
 		return new BsonTree(Filters.expr(toBson(expression)));
 	}
 
-	public Tree text(String search) {
+	protected Tree text(String search) {
 		return new BsonTree(Filters.text(search));
 	}
 
-	public Tree text(String search, TextSearchOptions options) {
+	protected Tree text(String search, TextSearchOptions options) {
 		return new BsonTree(Filters.text(search, options));
 	}
 
-	// --- PROTECTED UTILITIES ---
+	// --- PRIVATE UTILITIES ---
 
-	protected void callOnEach(MongoIterable<Document> iterable, Resolver res, Consumer<Tree> rowHandler) {
-		iterable.batchCursor((cursor, err1) -> {
-			if (err1 != null) {
-				closeCursor(cursor);
-				res.reject(err1);
-				return;
-			}
-			try {
-				AtomicLong count = new AtomicLong();
-				while (cursor != null && !cursor.isClosed()) {
-					cursor.next((list, err2) -> {
-						if (err2 != null) {
-							closeCursor(cursor);
-							res.reject(err2);
-							return;
-						}
-						for (Document row : list) {
-							rowHandler.accept(new Tree(row));
-							count.incrementAndGet();
-						}
-					});
-				}
-				res.resolve(count.get());
-			} catch (Throwable err3) {
-				res.reject(err3);
-			} finally {
-				closeCursor(cursor);
-			}
-		});
-	}
-
-	protected void collectAll(MongoIterable<Document> iterable, Resolver res) {
-		iterable.batchCursor((cursor, err1) -> {
-			if (err1 != null) {
-				closeCursor(cursor);
-				res.reject(err1);
-				return;
-			}
-			try {
-				LinkedList<Document> docList = new LinkedList<Document>();
-				AtomicLong count = new AtomicLong();
-				while (cursor != null && !cursor.isClosed()) {
-					cursor.next((list, err2) -> {
-						if (err2 != null) {
-							closeCursor(cursor);
-							res.reject(err2);
-							return;
-						}
-						for (Document row : list) {
-							docList.addLast(row);
-							count.incrementAndGet();
-						}
-					});
-				}
-				Tree doc = new Tree();
-				doc.put(COUNT, count.get());
-				doc.putObject(ROWS, docList);
-				res.resolve(doc);
-			} catch (Throwable err3) {
-				res.reject(err3);
-			} finally {
-				closeCursor(cursor);
-			}
-		});
-	}
-
-	protected void closeCursor(AsyncBatchCursor<Document> cursor) {
-		if (cursor != null) {
-			try {
-				cursor.close();
-			} catch (Exception ignored) {
-			}
-		}
-	}
-
-	protected <T> SingleResultCallback<T> toCallback(Resolver res) {
-		return ((result, cause) -> {
-			if (cause == null) {
-				res.resolve(result);
-			} else {
-				res.reject(cause);
-			}
-		});
-	}
-
-	protected Object toObject(Object value) {
+	private Object toObject(Object value) {
 		if (value != null && value instanceof Tree) {
 			return ((Tree) value).asObject();
 		}
 		return value;
 	}
 
-	protected Iterable<Object> toObjectIterable(Object... array) {
+	private Iterable<Object> toObjectIterable(Object... array) {
 		if (array == null || array.length == 0) {
 			return Collections.emptyList();
 		}
@@ -553,7 +483,7 @@ public class MongoDAO {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected Bson toBson(Tree tree) {
+	private Bson toBson(Tree tree) {
 		if (tree == null) {
 			return null;
 		}
@@ -567,7 +497,7 @@ public class MongoDAO {
 		return new Document((Map<String, Object>) o);
 	}
 
-	protected Iterable<Bson> toBsonIterable(Tree[] array) {
+	private Iterable<Bson> toBsonIterable(Tree[] array) {
 		if (array == null || array.length == 0) {
 			return Collections.emptyList();
 		}
@@ -576,6 +506,42 @@ public class MongoDAO {
 			list.add(toBson(tree));
 		}
 		return list;
+	}
+
+	private <T> SingleResultPromise<T> singleResult(Publisher<T> publisher) {
+		return new SingleResultPromise<T>(publisher);
+	}
+
+	private <T> CollectAllPromise<T> collectAll(Publisher<T> publisher) {
+		return new CollectAllPromise<T>(publisher);
+	}
+
+	private Tree updateResultToTree(UpdateResult res) {
+		Tree ret = new Tree();
+		ret.put(MATCHED, res.getMatchedCount());
+		ret.put(MODIFIED, res.getModifiedCount());
+		ret.put(ACKNOWLEDGED, res.wasAcknowledged());
+		BsonValue id = res.getUpsertedId();
+		if (id != null) {
+			ret.put(ID, id.toString());
+		}
+		return ret;
+	}
+
+	private Tree deleteResultToTree(DeleteResult res) {
+		Tree ret = new Tree();
+		ret.put(DELETED, res.getDeletedCount());
+		ret.put(ACKNOWLEDGED, res.wasAcknowledged());
+		return ret;
+	}
+
+	private Tree prepareForUpdate(Tree record) {
+		if (record.get(SET) == null) {
+			Tree rec = new Tree();
+			rec.putMap(SET).copyFrom(record);
+			return rec;
+		}
+		return record;
 	}
 
 }
