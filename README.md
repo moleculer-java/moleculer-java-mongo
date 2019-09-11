@@ -10,7 +10,6 @@ The "moleculer-java-mongo" is an asynchronous MongoDB API,
 specially designed for Java-based Moleculer ecosystem
 (but it can be used without the Moleculer Framework).
 The API can be conveniently used with the Spring Framework.
-
 This project is currently in "work in progress" status.
 
 ## Methods
