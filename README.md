@@ -283,7 +283,7 @@ mapReduce(mapFunction, reduceFunction).then(res -> {
 
  // Operation finished
  
-})
+});
 ```
 
 The MongoDAO superclass contains more functions. To use the not listed functions, see the JavaDoc of MongoDAO.
