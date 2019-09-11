@@ -57,7 +57,7 @@ public class TestDAO extends MongoDAO {
 		record.put(LAST_NAME, lastName);
 		
 		// Update record
-		return updateOne(record, eq(id)).then(in -> {
+		return updateOne(eq(id), record).then(in -> {
 			
 			// Return "true", if success
 			return in.get(MODIFIED, 0) > 0;

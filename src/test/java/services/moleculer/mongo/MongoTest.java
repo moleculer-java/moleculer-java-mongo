@@ -71,7 +71,7 @@ public class MongoTest extends TestCase {
 		Tree rec = new Tree();
 		rec.put("firstName", "C");
 		rec.put("lastName", "D");
-		testDAO.replaceOne(rec, testDAO.eq(id));
+		testDAO.replaceOne(testDAO.eq(id), rec);
 	}
 	
 	protected void checkSize(int requiredSize) throws Exception {

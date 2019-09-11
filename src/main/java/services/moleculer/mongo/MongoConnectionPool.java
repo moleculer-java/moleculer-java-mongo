@@ -34,6 +34,8 @@ import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
+ * Connection Pool for MongoDB.
+ * <br>
  * Init method: started()<br>
  * Destroy method: stopped()
  */
@@ -43,12 +45,15 @@ public class MongoConnectionPool {
 
 	protected static final Logger log = LoggerFactory.getLogger(MongoConnectionPool.class);
 
-	// --- CONECTION PARAMETERS ---
+	// --- CONECTION ---
 
 	protected MongoClient mongoClient;
 	protected MongoDatabase mongoDatabase;
-	protected String database = "db";
+
+	// --- CONECTION PARAMETERS ---
+	
 	protected String connectionString;
+	protected String database = "db";
 
 	// --- OPEN CONNECTION ---
 
@@ -87,8 +92,26 @@ public class MongoConnectionPool {
 		}
 	}
 
-	public MongoDatabase getDatabase() {
+	protected MongoDatabase getMongoDatabase() {
 		return mongoDatabase;
 	}
 
+	// --- GETTERS / SETTERS ---
+
+	public String getConnectionString() {
+		return connectionString;
+	}
+
+	public void setConnectionString(String connectionString) {
+		this.connectionString = connectionString;
+	}
+
+	public String getDatabase() {
+		return database;
+	}
+
+	public void setDatabase(String database) {
+		this.database = database;
+	}
+	
 }

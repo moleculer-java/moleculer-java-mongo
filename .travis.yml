@@ -7,6 +7,9 @@ jdk:
 cache:
   directories:
   - "$HOME/.gradle/caches"  
+
+services:
+  - mongodb
   
 install: gradle wrapper --gradle-version 4.2
   
