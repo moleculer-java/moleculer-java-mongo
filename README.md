@@ -1,4 +1,4 @@
-# [WIP] MongoDB Client for Moleculer Framework
+# (WIP) MongoDB Client for Moleculer Framework
 
-# License
+## License
 MongoDB Client for Moleculer Framework is available under the [MIT license](https://tldrlegal.com/license/mit-license).
