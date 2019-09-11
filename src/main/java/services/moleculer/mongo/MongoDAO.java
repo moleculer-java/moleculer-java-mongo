@@ -387,7 +387,7 @@ public class MongoDAO extends MongoFilters {
 	// --- DROP INDEX ---
 
 	/**
-	 * Drops the given index. Sample of usage:
+	 * Drops the specified index. Sample of usage:
 	 * 
 	 * <pre>
 	 * dropIndex("field1").then(res -&gt; {
@@ -433,7 +433,7 @@ public class MongoDAO extends MongoFilters {
 		return singleResult(collection.dropIndex(indexName, options));
 	}
 
-	// --- INSERT ONE RECORD ---
+	// --- INSERT ONE DOCUMENT ---
 
 	/**
 	 * Inserts the provided document. If the document is missing an identifier,
@@ -499,7 +499,7 @@ public class MongoDAO extends MongoFilters {
 		});
 	}
 
-	// --- REPLACE ONE ---
+	// --- REPLACE ONE DOCUMENT ---
 
 	/**
 	 * Replace a document in the collection according to the specified
@@ -594,7 +594,7 @@ public class MongoDAO extends MongoFilters {
 				});
 	}
 
-	// --- UPDATE ONE ---
+	// --- UPDATE ONE DOCUMENT ---
 
 	/**
 	 * Update a single document in the collection according to the specified
@@ -644,7 +644,7 @@ public class MongoDAO extends MongoFilters {
 		});
 	}
 
-	// --- UPDATE MANY ---
+	// --- UPDATE MANY DOCUMENTS ---
 
 	/**
 	 * Update all documents in the collection according to the specified
@@ -688,7 +688,7 @@ public class MongoDAO extends MongoFilters {
 		});
 	}
 
-	// --- DELETE ONE ---
+	// --- DELETE ONE DOCUMENT ---
 
 	/**
 	 * Removes at most one document from the collection that matches the given
@@ -765,7 +765,7 @@ public class MongoDAO extends MongoFilters {
 		});
 	}
 
-	// --- DELETE MANY ---
+	// --- DELETE MANY DOCUMENTS ---
 
 	/**
 	 * Removes all documents from the collection that match the given query
@@ -783,7 +783,7 @@ public class MongoDAO extends MongoFilters {
 	 * Sample of usage:
 	 * 
 	 * <pre>
-	 * deleteResultToTree(eq("field1", 123)).then(res -&gt; {
+	 * deleteMany(eq("field1", 123)).then(res -&gt; {
 	 * 
 	 *  // Delete operation finished
 	 *  int deleted = res.get("deleted");
@@ -821,7 +821,7 @@ public class MongoDAO extends MongoFilters {
 	 * DeleteOptions opts = new DeleteOptions();
 	 * opts.collation(...);
 	 * 
-	 * deleteResultToTree(eq("field1", 123), opts).then(res -&gt; {
+	 * deleteMany(eq("field1", 123), opts).then(res -&gt; {
 	 * 
 	 *  // Delete operation finished
 	 *  int deleted = res.get("deleted");
@@ -848,7 +848,7 @@ public class MongoDAO extends MongoFilters {
 		});
 	}
 
-	// --- COUNTS ---
+	// --- COUNT DOCUMENTS ---
 
 	/**
 	 * Counts the number of documents in the collection. Sample of usage:
@@ -927,7 +927,7 @@ public class MongoDAO extends MongoFilters {
 		return singleResult(collection.countDocuments(toBson(filter), options));
 	}
 
-	// --- FIND ONE ---
+	// --- FIND ONE DOCUMENT ---
 
 	/**
 	 * Finds one document by the specified query filter. Sample of usage:
@@ -958,7 +958,7 @@ public class MongoDAO extends MongoFilters {
 		return singleResult(find.first());
 	}
 
-	// --- FIND MANY ---
+	// --- FIND MANY DOCUMENTS ---
 
 	/**
 	 * Queries the specified number of records from the collection. Sample of
