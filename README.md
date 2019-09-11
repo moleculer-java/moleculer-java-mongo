@@ -19,15 +19,15 @@ This project is currently in "work in progress" status.
 Drops this collection from the Database.
 
 ```java
-drop().then(res -&gt; {
+drop().then(res -> {
 
  // Drop operation finished
  
-}).then(res -&gt; {
+}).then(res -> {
  // ...
-}).then(res -&gt; {
+}).then(res -> {
  // ...
-}).catchError(err -&gt; {
+}).catchError(err -> {
  // Error handler
 });
 ```
@@ -37,7 +37,7 @@ drop().then(res -&gt; {
 Rename the collection.
 
 ```java
-renameCollection("db", "collection").then(res -&gt; {
+renameCollection("db", "collection").then(res -> {
 
  // Rename operation finished
  
@@ -49,7 +49,7 @@ renameCollection("db", "collection").then(res -&gt; {
 Creates ascending/descending/2dsphere/hash/text/etc. indexes.
 
 ```java
-createAscendingIndexes("field1", "field2").then(res -&gt; {
+createAscendingIndexes("field1", "field2").then(res -> {
 
  // Index created successfully
  
@@ -61,7 +61,7 @@ createAscendingIndexes("field1", "field2").then(res -&gt; {
 Get all the indexes in this collection.
 
 ```java
-listIndexes().then(res -&gt; {
+listIndexes().then(res -> {
 
  // Operation finished
  for (Tree collection: res.get("rows")) {
@@ -79,7 +79,7 @@ Tree doc = new Tree();
 doc.put("field1", 123);
 doc.put("field2.subfield", false);
 
-insertOne(doc).then(res -&gt; {
+insertOne(doc).then(res -> {
 
  // Insert operation finished
  String id = res.get("_id", "");
@@ -96,7 +96,7 @@ Replace a document in the collection according to the specified arguments.
 Tree replacement = new Tree();
 replacement.put("field1", 123);
 
-replaceOne(eq("field1", 123), replacement).then(res -&gt; {
+replaceOne(eq("field1", 123), replacement).then(res -> {
 
  // Replace operation finished
  int modified = res.get("modified");
@@ -113,7 +113,7 @@ Update a single document in the collection according to the specified arguments.
 Tree update = new Tree();
 update.put("field1", 123);
 
-updateOne(eq("field1", 123), update).then(res -&gt; {
+updateOne(eq("field1", 123), update).then(res -> {
 
  // Replace operation finished
  int modified = res.get("modified");
@@ -130,7 +130,7 @@ Update all documents in the collection according to the specified arguments.
 Tree update = new Tree();
 update.put("field1", 123);
 
-updateMany(eq("field1", 123), update).then(res -&gt; {
+updateMany(eq("field1", 123), update).then(res -> {
 
  // Replace operation finished
  int modified = res.get("modified");
@@ -144,7 +144,7 @@ updateMany(eq("field1", 123), update).then(res -&gt; {
 Removes at most one document from the collection that matches the given filter. If no documents match, the collection is not modified.
 
 ```java
-deleteOne(eq("field1", 123)).then(res -&gt; {
+deleteOne(eq("field1", 123)).then(res -> {
 
  // Delete operation finished
  int deleted = res.get("deleted");
@@ -158,7 +158,7 @@ deleteOne(eq("field1", 123)).then(res -&gt; {
 Removes all documents from the collection that match the given query filter. If no documents match, the collection is not modified.
 
 ```java
-deleteMany(eq("field1", 123)).then(res -&gt; {
+deleteMany(eq("field1", 123)).then(res -> {
 
  // Delete operation finished
  int deleted = res.get("deleted");
@@ -172,7 +172,7 @@ deleteMany(eq("field1", 123)).then(res -&gt; {
 Counts the number of documents in the collection according to the given filters.
 
 ```java
-count(eq("field1", 123)).then(res -&gt; {
+count(eq("field1", 123)).then(res -> {
 
  // Count operation finished
  long numberOfDocuments = res.asLong();
@@ -186,7 +186,7 @@ count(eq("field1", 123)).then(res -&gt; {
 Finds one document by the specified query filter.
 
 ```java
-findOne(eq("field1", 123)).then(res -&gt; {
+findOne(eq("field1", 123)).then(res -> {
 
  // Find operation finished
  if (res != null) {
@@ -203,7 +203,7 @@ findOne(eq("field1", 123)).then(res -&gt; {
 Queries the specified number of records from the collection.
 
 ```java
-find(eq("field1", 123), null, 0, 10).then(res -&gt; {
+find(eq("field1", 123), null, 0, 10).then(res -> {
 
  // Find operation finished
  int maxNumberOfSelectableDocuments = res.get("count");
@@ -220,7 +220,7 @@ find(eq("field1", 123), null, 0, 10).then(res -&gt; {
 Atomically find a document and remove it.
 
 ```java
-findOneAndDelete(eq("field1", 123)).then(res -&gt; {
+findOneAndDelete(eq("field1", 123)).then(res -> {
 
  // Delete operation finished
  if (res != null) {
@@ -240,7 +240,7 @@ Atomically find a document and replace it.
 Tree replacement = new Tree();
 replacement.put("field1", 123);
 
-findOneAndReplace(eq("field1", 123), replacement).then(res -&gt; {
+findOneAndReplace(eq("field1", 123), replacement).then(res -> {
 
  // Replace operation finished
  if (res != null) {
@@ -260,7 +260,7 @@ Atomically find a document and update it.
 Tree update = new Tree();
 update.put("field1", 123);
 
-findOneAndUpdate(eq("field1", 123), update).then(res -&gt; {
+findOneAndUpdate(eq("field1", 123), update).then(res -> {
 
  // Update operation finished
  if (res != null) {
@@ -279,7 +279,7 @@ Aggregates documents according to the specified map-reduce function.
 ```java
 String mapFunction = "...";
 String reduceFunction = "...";
-mapReduce(mapFunction, reduceFunction).then(res -&gt; {
+mapReduce(mapFunction, reduceFunction).then(res -> {
 
  // Operation finished
  
