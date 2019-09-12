@@ -38,5 +38,5 @@ import java.lang.annotation.Target;
 public @interface MongoCollection {
 
 	String value();
-	
+
 }

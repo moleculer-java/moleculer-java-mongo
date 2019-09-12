@@ -64,9 +64,12 @@ Get all the indexes in this collection.
 listIndexes().then(res -> {
 
  // Operation finished
- for (Tree collection: res.get("rows")) {
-   String name = collection.asString();
- }	 
+ for (Tree index: res.get("rows")) {
+   System.out.println(index.get("name", ""));
+ }
+
+ int numberOfIndexes = res.get("count", 0); 
+ 
 });
 ```
 

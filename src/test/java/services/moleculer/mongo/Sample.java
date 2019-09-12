@@ -25,23 +25,25 @@
  */
 package services.moleculer.mongo;
 
+import io.datatree.Tree;
+
 /**
  * How to use without Spring?
  */
 public class Sample {
 
 	public static void main(String[] args) throws Exception {
-		
+
 		MongoConnectionPool pool = new MongoConnectionPool();
 		// pool.setConnectionString("mongodb://mongodb0.example.com:27017");
 		pool.started();
-		
+
 		TestDAO userDAO = new TestDAO();
 		userDAO.setMongoConnectionPool(pool);
-		
-		String id = userDAO.insertUser("Tom", "Smith").waitFor().asString();
-		
-		System.out.println("New record ID: " + id);
+
+		Tree rsp = userDAO.insertUser("Tom", "Smith").waitFor();
+
+		System.out.println("New record ID: " + rsp.get("_id", ""));
 	}
-	
+
 }

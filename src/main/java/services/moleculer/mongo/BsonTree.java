@@ -32,13 +32,13 @@ import io.datatree.Tree;
 public class BsonTree extends Tree {
 
 	// --- SERIAL VERSION UID ---
-	
+
 	private static final long serialVersionUID = -127566796809020910L;
 
 	// --- CONSTRUCTOR ---
-	
+
 	public BsonTree(Bson bson) {
 		super(null, null, bson);
 	}
-	
+
 }

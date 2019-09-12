@@ -37,7 +37,7 @@ public class SingleResultPromise<T> extends Promise implements Subscriber<T> {
 	// --- VARIABLES ---
 
 	protected T value;
-	
+
 	// --- CONSTRUCTOR ---
 
 	public SingleResultPromise(Publisher<T> publisher) {
@@ -72,5 +72,5 @@ public class SingleResultPromise<T> extends Promise implements Subscriber<T> {
 			return action.apply((T) in.asObject());
 		});
 	}
-	
+
 }

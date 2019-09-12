@@ -39,6 +39,7 @@ import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.InsertOneOptions;
+import com.mongodb.client.model.RenameCollectionOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -49,37 +50,40 @@ import io.datatree.Promise;
 import io.datatree.Tree;
 
 /**
- * Superclass of all Mongo handlers. Sample DAO class for handling "User" entities:
+ * Superclass of all Mongo handlers. Sample DAO class for handling "User"
+ * entities:
  * 
  * <pre>
- * @MongoCollection("user")
+ * &#64;MongoCollection("user")
  * public class UserDAO extends MongoDAO {
  * 
- *   public Promise insertUser(String firstName, String lastName) {
- *     Tree doc = new Tree();
- *     doc.put("firstName", firstName);
- *     doc.put("lastName", lastName);
- *     return insertOne(doc).then(res -&gt; {
- *       return res.get("_id", "");
- *     });
- *   }
+ * 	public Promise insertUser(String firstName, String lastName) {
+ * 		Tree doc = new Tree();
+ * 		doc.put("firstName", firstName);
+ * 		doc.put("lastName", lastName);
+ * 		return insertOne(doc).then(res -&gt; {
+ * 			return res.get("_id", "");
+ * 		});
+ * 	}
  * 
- *   public Promise findUserById(String id) {
- *     return findOne(eq(id));
- *   }
+ * 	public Promise findUserById(String id) {
+ * 		return findOne(eq(id));
+ * 	}
  *
- *   public Promise deleteUserById(String id) {
- *     return deleteOne(eq(id)).then(res -&gt; {
- *       return res.get("deleted", 0) > 0;
- *     });
- *   }
- *   
+ * 	public Promise deleteUserById(String id) {
+ * 		return deleteOne(eq(id)).then(res -&gt; {
+ * 			return res.get("deleted", 0) > 0;
+ * 		});
+ * 	}
+ * 
  * }
  * </pre>
+ * 
  * Example of using the code above:
+ * 
  * <pre>
  * userDAO.insertUser("Tom", "Smith").then(res -&gt; {
- *   System.out.println("Record ID: " + res.asString());
+ * 	System.out.println("Record ID: " + res.asString());
  * });
  * </pre>
  */
@@ -164,7 +168,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * drop().then(res -&gt; {
-	 *  // Drop operation finished
+	 * 	// Drop operation finished
 	 * });
 	 * </pre>
 	 *
@@ -182,7 +186,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * renameCollection("db", "collection").then(res -&gt; {
-	 *  // Rename operation finished
+	 * 	// Rename operation finished
 	 * });
 	 * </pre>
 	 *
@@ -197,6 +201,31 @@ public class MongoDAO extends MongoFilters {
 		return singleResult(collection.renameCollection(new MongoNamespace(databaseName, collectionName)));
 	}
 
+	/**
+	 * Rename the collection. Sample of usage:
+	 * 
+	 * <pre>
+	 * RenameCollectionOptions opts = new RenameCollectionOptions();
+	 * opts.dropTarget(false);
+	 * 
+	 * renameCollection("db", "collection", opts).then(res -&gt; {
+	 * 	// Rename operation finished
+	 * });
+	 * </pre>
+	 *
+	 * @param databaseName
+	 *            name of the database
+	 * @param collectionName
+	 *            new collection name
+	 * @param options
+	 *            the options for renaming a collection
+	 * @return a Promise with a single element indicating when the operation has
+	 *         completed
+	 */
+	protected Promise renameCollection(String databaseName, String collectionName, RenameCollectionOptions options) {
+		return singleResult(collection.renameCollection(new MongoNamespace(databaseName, collectionName), options));
+	}
+
 	// --- CREATE INDEX(ES) ---
 
 	/**
@@ -204,13 +233,13 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * createAscendingIndexes("field1", "field2").then(res -&gt; {
-	 *  // Index created successfully
+	 * 	// Index created successfully
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).catchError(err -&gt; {
-	 *  // Error handler
+	 * 	// Error handler
 	 * });
 	 * </pre>
 	 *
@@ -228,7 +257,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * createDescendingIndexes("field1", "field2").then(res -&gt; {
-	 *  // Index created successfully
+	 * 	// Index created successfully
 	 * });
 	 * </pre>
 	 *
@@ -246,7 +275,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * createGeo2DSphereIndexes("field1", "field2").then(res -&gt; {
-	 *  // Index created successfully
+	 * 	// Index created successfully
 	 * });
 	 * </pre>
 	 *
@@ -264,7 +293,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * createGeo2DIndex("field1").then(res -&gt; {
-	 *  // Index created successfully
+	 * 	// Index created successfully
 	 * });
 	 * </pre>
 	 *
@@ -282,7 +311,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * createHashedIndex("field1").then(res -&gt; {
-	 *  // Index created successfully
+	 * 	// Index created successfully
 	 * });
 	 * </pre>
 	 *
@@ -300,13 +329,13 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * createTextIndex("field1").then(res -&gt; {
-	 *  // Index created successfully
+	 * 	// Index created successfully
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).catchError(err -&gt; {
-	 *  // Error handler
+	 * 	// Error handler
 	 * });
 	 * </pre>
 	 *
@@ -325,7 +354,7 @@ public class MongoDAO extends MongoFilters {
 	 * <pre>
 	 * BsonTree indexes = new BsonTree(Indexes.text("field1"));
 	 * createIndexes(indexes).then(res -&gt; {
-	 *  // Index created successfully
+	 * 	// Index created successfully
 	 * });
 	 * </pre>
 	 *
@@ -343,7 +372,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * createIndexes(Indexes.text("field1")).then(res -&gt; {
-	 *  // Index created successfully
+	 * 	// Index created successfully
 	 * });
 	 * </pre>
 	 *
@@ -365,8 +394,20 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * {
-	 *   "count": 3,
-	 *   "rows": ["collection1", "collection2", "collection3"]
+	 *   "count":2,
+	 *   "rows":[
+	 *     {
+	 *       "v":1,
+	 *       "key":{"_id":1},
+	 *       "name":"_id_",
+	 *       "ns":"db.test"
+	 *     }, {
+	 *       "v":1,
+	 *       "key":{"a":1},
+	 *       "name":"a_1",
+	 *       "ns":"db.test"
+	 *     }
+	 *   ]
 	 * }
 	 * </pre>
 	 * 
@@ -374,7 +415,12 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * listIndexes().then(res -&gt; {
-	 *  // Operation finished
+	 * 
+	 * 	// Operation finished
+	 * 	for (Tree index : res.get("rows")) {
+	 * 		System.out.println(index.get("name", ""));
+	 * 	}
+	 * 
 	 * });
 	 * </pre>
 	 *
@@ -391,13 +437,13 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * dropIndex("field1").then(res -&gt; {
-	 *  // Drop index operation finished
+	 * 	// Drop index operation finished
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).catchError(err -&gt; {
-	 *  // Error handler
+	 * 	// Error handler
 	 * });
 	 * </pre>
 	 *
@@ -418,7 +464,7 @@ public class MongoDAO extends MongoFilters {
 	 * opts.maxTime(10, TimeUnit.SECONDS);
 	 * 
 	 * dropIndex("field1", opts).then(res -&gt; {
-	 *  // Drop index operation finished
+	 * 	// Drop index operation finished
 	 * });
 	 * </pre>
 	 *
@@ -446,10 +492,10 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * insertOne(doc).then(res -&gt; {
 	 * 
-	 *  // Insert operation finished
-	 *  String id = res.get("_id", "");
-	 *  return id;
-	 *  
+	 * 	// Insert operation finished
+	 * 	String id = res.get("_id", "");
+	 * 	return id;
+	 * 
 	 * });
 	 * </pre>
 	 *
@@ -478,10 +524,10 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * insertOne(doc, opts).then(res -&gt; {
 	 * 
-	 *  // Insert operation finished
-	 *  String id = res.get("_id", "");
-	 *  return id;
-	 *  
+	 * 	// Insert operation finished
+	 * 	String id = res.get("_id", "");
+	 * 	return id;
+	 * 
 	 * });
 	 * </pre>
 	 *
@@ -522,16 +568,16 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * replaceOne(eq("field1", 123), replacement).then(res -&gt; {
 	 * 
-	 *  // Replace operation finished
-	 *  int modified = res.get("modified");
-	 *  return modified > 0;
-	 *  
+	 * 	// Replace operation finished
+	 * 	int modified = res.get("modified");
+	 * 	return modified > 0;
+	 * 
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).catchError(err -&gt; {
-	 *  // Error handler
+	 * 	// Error handler
 	 * });
 	 * </pre>
 	 * 
@@ -572,10 +618,10 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * replaceOne(eq("field1", 123), replacement, opts).then(res -&gt; {
 	 * 
-	 *  // Replace operation finished
-	 *  int modified = res.get("modified");
-	 *  return modified > 0;
-	 *  
+	 * 	// Replace operation finished
+	 * 	int modified = res.get("modified");
+	 * 	return modified > 0;
+	 * 
 	 * });
 	 * </pre>
 	 * 
@@ -617,16 +663,16 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * updateOne(eq("field1", 123), update).then(res -&gt; {
 	 * 
-	 *  // Replace operation finished
-	 *  int modified = res.get("modified");
-	 *  return modified > 0;
-	 *  
+	 * 	// Replace operation finished
+	 * 	int modified = res.get("modified");
+	 * 	return modified > 0;
+	 * 
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).catchError(err -&gt; {
-	 *  // Error handler
+	 * 	// Error handler
 	 * });
 	 * </pre>
 	 * 
@@ -667,10 +713,10 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * updateMany(eq("field1", 123), update).then(res -&gt; {
 	 * 
-	 *  // Replace operation finished
-	 *  int modified = res.get("modified");
-	 *  return modified > 0;
-	 *  
+	 * 	// Replace operation finished
+	 * 	int modified = res.get("modified");
+	 * 	return modified > 0;
+	 * 
 	 * });
 	 * </pre>
 	 * 
@@ -697,7 +743,6 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * {
-	 *   "matched": 10,
 	 *   "deleted": 4,
 	 *   "acknowledged": true
 	 * }
@@ -708,10 +753,10 @@ public class MongoDAO extends MongoFilters {
 	 * <pre>
 	 * deleteOne(eq("field1", 123)).then(res -&gt; {
 	 * 
-	 *  // Delete operation finished
-	 *  int deleted = res.get("deleted");
-	 *  return deleted > 0;
-	 *  
+	 * 	// Delete operation finished
+	 * 	int deleted = res.get("deleted");
+	 * 	return deleted > 0;
+	 * 
 	 * });
 	 * </pre>
 	 * 
@@ -732,7 +777,6 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * {
-	 *   "matched": 10,
 	 *   "deleted": 4,
 	 *   "acknowledged": true
 	 * }
@@ -765,6 +809,37 @@ public class MongoDAO extends MongoFilters {
 		});
 	}
 
+	// --- DELETE ALL DOCUMENTS ---
+
+	/**
+	 * Removes all documents from the collection.<br>
+	 * Sample to delete result structure:
+	 * 
+	 * <pre>
+	 * {
+	 *   "deleted": 10,
+	 *   "acknowledged": true
+	 * }
+	 * </pre>
+	 *
+	 * Sample of usage:
+	 * 
+	 * <pre>
+	 * deleteAll().then(res -&gt; {
+	 * 
+	 * 	// Delete operation finished
+	 * 	int deleted = res.get("deleted");
+	 * 	return deleted > 0;
+	 * 
+	 * });
+	 * </pre>
+	 * 
+	 * @return a Promise with a single element the deleted result structure
+	 */
+	protected Promise deleteAll() {
+		return deleteMany(new Tree());
+	}
+
 	// --- DELETE MANY DOCUMENTS ---
 
 	/**
@@ -774,7 +849,6 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * {
-	 *   "matched": 10,
 	 *   "deleted": 4,
 	 *   "acknowledged": true
 	 * }
@@ -785,10 +859,10 @@ public class MongoDAO extends MongoFilters {
 	 * <pre>
 	 * deleteMany(eq("field1", 123)).then(res -&gt; {
 	 * 
-	 *  // Delete operation finished
-	 *  int deleted = res.get("deleted");
-	 *  return deleted > 0;
-	 *  
+	 * 	// Delete operation finished
+	 * 	int deleted = res.get("deleted");
+	 * 	return deleted > 0;
+	 * 
 	 * });
 	 * </pre>
 	 * 
@@ -809,7 +883,6 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * {
-	 *   "matched": 10,
 	 *   "deleted": 4,
 	 *   "acknowledged": true
 	 * }
@@ -856,9 +929,9 @@ public class MongoDAO extends MongoFilters {
 	 * <pre>
 	 * count().then(res -&gt; {
 	 * 
-	 *  // Count operation finished
-	 *  long numberOfDocuments = res.asLong();
-	 *  return numberOfDocuments + " documents found.";
+	 * 	// Count operation finished
+	 * 	long numberOfDocuments = res.asLong();
+	 * 	return numberOfDocuments + " documents found.";
 	 * 
 	 * });
 	 * </pre>
@@ -877,12 +950,12 @@ public class MongoDAO extends MongoFilters {
 	 * <pre>
 	 * count(eq("field1", 123)).then(res -&gt; {
 	 * 
-	 *  // Count operation finished
-	 *  long numberOfDocuments = res.asLong();
-	 *  
-	 *  Tree rsp = new Tree();
-	 *  rsp.put("count", numberOfDocuments);
-	 *  return rsp;
+	 * 	// Count operation finished
+	 * 	long numberOfDocuments = res.asLong();
+	 * 
+	 * 	Tree rsp = new Tree();
+	 * 	rsp.put("count", numberOfDocuments);
+	 * 	return rsp;
 	 * 
 	 * });
 	 * </pre>
@@ -906,12 +979,12 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * count(eq("field1", 123), opts).then(res -&gt; {
 	 * 
-	 *  // Count operation finished
-	 *  long numberOfDocuments = res.asLong();
-	 *  
-	 *  Tree rsp = new Tree();
-	 *  rsp.put("count", numberOfDocuments);
-	 *  return rsp;
+	 * 	// Count operation finished
+	 * 	long numberOfDocuments = res.asLong();
+	 * 
+	 * 	Tree rsp = new Tree();
+	 * 	rsp.put("count", numberOfDocuments);
+	 * 	return rsp;
 	 * 
 	 * });
 	 * </pre>
@@ -935,13 +1008,13 @@ public class MongoDAO extends MongoFilters {
 	 * <pre>
 	 * findOne(eq("field1", 123)).then(res -&gt; {
 	 * 
-	 *  // Find operation finished
-	 *  if (res != null) {
-	 *    String firstName = res.get("firstName", "");
-	 *    int age = res.get("age", 0);
-	 *  }
-	 *  return res;
-	 *  
+	 * 	// Find operation finished
+	 * 	if (res != null) {
+	 * 		String firstName = res.get("firstName", "");
+	 * 		int age = res.get("age", 0);
+	 * 	}
+	 * 	return res;
+	 * 
 	 * });
 	 * </pre>
 	 * 
@@ -967,19 +1040,19 @@ public class MongoDAO extends MongoFilters {
 	 * <pre>
 	 * find(eq("field1", 123), null, 0, 10).then(res -&gt; {
 	 * 
-	 *  // Find operation finished
-	 *  int maxNumberOfSelectableDocuments = res.get("count");
-	 *  for (Tree doc: res.get("rows")) {
-	 *    String firstName = res.get("firstName", "");
-	 *  }
-	 *  return res;
+	 * 	// Find operation finished
+	 * 	int maxNumberOfSelectableDocuments = res.get("count");
+	 * 	for (Tree doc : res.get("rows")) {
+	 * 		String firstName = res.get("firstName", "");
+	 * 	}
+	 * 	return res;
 	 * 
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).catchError(err -&gt; {
-	 *  // Error handler
+	 * 	// Error handler
 	 * });
 	 * </pre>
 	 * 
@@ -1042,13 +1115,13 @@ public class MongoDAO extends MongoFilters {
 	 * <pre>
 	 * findOneAndDelete(eq("field1", 123)).then(res -&gt; {
 	 * 
-	 *  // Delete operation finished
-	 *  if (res != null) {
-	 *    String firstName = res.get("firstName", "");
-	 *    int age = res.get("age", 0);
-	 *  }
-	 *  return res;
-	 *  
+	 * 	// Delete operation finished
+	 * 	if (res != null) {
+	 * 		String firstName = res.get("firstName", "");
+	 * 		int age = res.get("age", 0);
+	 * 	}
+	 * 	return res;
+	 * 
 	 * });
 	 * </pre>
 	 *
@@ -1070,13 +1143,13 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * findOneAndDelete(eq("field1", 123), opts).then(res -&gt; {
 	 * 
-	 *  // Delete operation finished
-	 *  if (res != null) {
-	 *    String firstName = res.get("firstName", "");
-	 *    int age = res.get("age", 0);
-	 *  }
-	 *  return res;
-	 *  
+	 * 	// Delete operation finished
+	 * 	if (res != null) {
+	 * 		String firstName = res.get("firstName", "");
+	 * 		int age = res.get("age", 0);
+	 * 	}
+	 * 	return res;
+	 * 
 	 * });
 	 * </pre>
 	 *
@@ -1098,17 +1171,17 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * Tree replacement = new Tree();
-	 * replacement.put("field1", 123);
+	 * replacement.put("field1", 222);
 	 * 
 	 * findOneAndReplace(eq("field1", 123), replacement).then(res -&gt; {
 	 * 
-	 *  // Replace operation finished
-	 *  if (res != null) {
-	 *    String firstName = res.get("firstName", "");
-	 *    int age = res.get("age", 0);
-	 *  }
-	 *  return res;
-	 *  
+	 * 	// Replace operation finished
+	 * 	if (res != null) {
+	 * 		String firstName = res.get("firstName", "");
+	 * 		int age = res.get("age", 0);
+	 * 	}
+	 * 	return res;
+	 * 
 	 * });
 	 * </pre>
 	 *
@@ -1129,26 +1202,26 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * Tree replacement = new Tree();
-	 * replacement.put("field1", 123);
+	 * replacement.put("field1", 111);
 	 * 
 	 * FindOneAndReplaceOptions opts = new FindOneAndReplaceOptions();
 	 * opts.upsert(true);
 	 * 
 	 * findOneAndReplace(eq("field1", 123), replacement, opts).then(res -&gt; {
 	 * 
-	 *  // Replace operation finished
-	 *  if (res != null) {
-	 *    String firstName = res.get("firstName", "");
-	 *    int age = res.get("age", 0);
-	 *  }
-	 *  return res;
-	 *  
+	 * 	// Replace operation finished
+	 * 	if (res != null) {
+	 * 		String firstName = res.get("firstName", "");
+	 * 		int age = res.get("age", 0);
+	 * 	}
+	 * 	return res;
+	 * 
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).catchError(err -&gt; {
-	 *  // Error handler
+	 * 	// Error handler
 	 * });
 	 * </pre>
 	 *
@@ -1173,17 +1246,17 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * Tree update = new Tree();
-	 * update.put("field1", 123);
+	 * update.put("field1", 345);
 	 * 
 	 * findOneAndUpdate(eq("field1", 123), update).then(res -&gt; {
 	 * 
-	 *  // Update operation finished
-	 *  if (res != null) {
-	 *    String firstName = res.get("firstName", "");
-	 *    int age = res.get("age", 0);
-	 *  }
-	 *  return res;
-	 *  
+	 * 	// Update operation finished
+	 * 	if (res != null) {
+	 * 		String firstName = res.get("firstName", "");
+	 * 		int age = res.get("age", 0);
+	 * 	}
+	 * 	return res;
+	 * 
 	 * });
 	 * </pre>
 	 *
@@ -1197,7 +1270,8 @@ public class MongoDAO extends MongoFilters {
 	 *         filter, then null will be returned
 	 */
 	protected Promise findOneAndUpdate(Tree filter, Tree update) {
-		return singleResult(collection.findOneAndUpdate(toBson(filter), (Document) toBson(update)));
+		Tree rec = prepareForUpdate(update);
+		return singleResult(collection.findOneAndUpdate(toBson(filter), (Document) toBson(rec)));
 	}
 
 	/**
@@ -1205,20 +1279,20 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * <pre>
 	 * Tree update = new Tree();
-	 * update.put("field1", 123);
+	 * update.put("field1", 345);
 	 * 
 	 * FindOneAndUpdateOptions opts = new FindOneAndUpdateOptions();
 	 * opts.upsert(true);
 	 * 
 	 * findOneAndUpdate(eq("field1", 123), update, opts).then(res -&gt; {
 	 * 
-	 *  // Update operation finished
-	 *  if (res != null) {
-	 *    String firstName = res.get("firstName", "");
-	 *    int age = res.get("age", 0);
-	 *  }
-	 *  return res;
-	 *  
+	 * 	// Update operation finished
+	 * 	if (res != null) {
+	 * 		String firstName = res.get("firstName", "");
+	 * 		int age = res.get("age", 0);
+	 * 	}
+	 * 	return res;
+	 * 
 	 * });
 	 * </pre>
 	 *
@@ -1232,7 +1306,8 @@ public class MongoDAO extends MongoFilters {
 	 * @return a Promise with a single element the document that was updated.
 	 */
 	protected Promise findOneAndUpdate(Tree filter, Tree update, FindOneAndUpdateOptions options) {
-		return singleResult(collection.findOneAndUpdate(toBson(filter), (Document) toBson(update), options));
+		Tree rec = prepareForUpdate(update);
+		return singleResult(collection.findOneAndUpdate(toBson(filter), (Document) toBson(rec), options));
 	}
 
 	// --- MAP/REDUCE ---
@@ -1245,13 +1320,13 @@ public class MongoDAO extends MongoFilters {
 	 * String mapFunction = "...";
 	 * String reduceFunction = "...";
 	 * mapReduce(mapFunction, reduceFunction).then(res -&gt; {
-	 *  // Operation finished
+	 * 	// Operation finished
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).then(res -&gt; {
-	 *  // ...
+	 * 	// ...
 	 * }).catchError(err -&gt; {
-	 *  // Error handler
+	 * 	// Error handler
 	 * });
 	 * </pre>
 	 *

@@ -25,6 +25,9 @@
  */
 package services.moleculer.mongo;
 
+import static services.moleculer.mongo.MongoDAO.COUNT;
+import static services.moleculer.mongo.MongoDAO.ROWS;
+
 import java.util.LinkedList;
 
 import org.reactivestreams.Publisher;
@@ -33,9 +36,6 @@ import org.reactivestreams.Subscription;
 
 import io.datatree.Promise;
 import io.datatree.Tree;
-
-import static services.moleculer.mongo.MongoDAO.COUNT;
-import static services.moleculer.mongo.MongoDAO.ROWS;
 
 public class CollectAllPromise<T> extends Promise implements Subscriber<T> {
 

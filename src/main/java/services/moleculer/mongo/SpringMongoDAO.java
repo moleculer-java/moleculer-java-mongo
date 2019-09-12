@@ -30,9 +30,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 public class SpringMongoDAO extends MongoDAO implements ApplicationContextAware {
-	
+
 	// --- INIT CONNECTION BY ANNOTATIONS ---
-	
+
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
@@ -56,5 +56,5 @@ public class SpringMongoDAO extends MongoDAO implements ApplicationContextAware 
 		}
 		setMongoConnectionPool(pool);
 	}
-	
+
 }
