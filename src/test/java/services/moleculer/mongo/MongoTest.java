@@ -399,6 +399,29 @@ public class MongoTest extends TestCase {
 		assertEquals(0, rsp.get("a", 1));
 		assertEquals("ZZ", rsp.get("d", ""));
 		assertEquals(5, rsp.size());
+		
+		// Set max items per query
+		createTable();
+		testDAO.setMaxItemsPerQuery(5);
+		assertEquals(5, testDAO.getMaxItemsPerQuery());
+		rsp = testDAO.find(null, null).waitFor(2000);
+		assertEquals(10, rsp.get("count", 0));
+		assertEquals(5, rsp.get("rows").size());
+
+		testDAO.setMaxItemsPerQuery(3);
+		assertEquals(3, testDAO.getMaxItemsPerQuery());
+		rsp = testDAO.find(null).waitFor(2000);
+		assertEquals(10, rsp.get("count", 0));
+		assertEquals(3, rsp.get("rows").size());
+		
+		rsp = testDAO.find(null, null, 2, 0).waitFor(2000);
+		assertEquals(10, rsp.get("count", 0));
+		assertEquals(3, rsp.get("rows").size());	
+		
+		// Collection name test
+		XyzDAO xyz = new XyzDAO();
+		xyz.setMongoConnectionPool(pool);
+		assertEquals("xyz", xyz.collection.getNamespace().getCollectionName());
 	}
 
 	protected void assertSize(int requiredSize) throws Exception {

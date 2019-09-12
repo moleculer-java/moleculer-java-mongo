@@ -1034,11 +1034,55 @@ public class MongoDAO extends MongoFilters {
 	// --- FIND MANY DOCUMENTS ---
 
 	/**
+	 * Queries the all records from the collection by the specified filter.
+	 * Sample of usage:
+	 * 
+	 * <pre>
+	 * find(gte("field1", 123), sort).then(res -&gt; {
+	 * 	// Find operation finished
+	 * });
+	 * </pre>
+	 * 
+	 * @param filter
+	 *            the query filter
+	 * @return a Promise with the selected documents and the max number of
+	 *         selectable documents.
+	 */
+	protected Promise find(Tree filter) {
+		return find(filter, null, 0, maxItemsPerQuery);
+	}
+
+	/**
+	 * Queries the all records from the collection by the specified filter.
+	 * Sample of usage:
+	 * 
+	 * <pre>
+	 * Tree sort = new Tree();
+	 * sort.put("field1", -1);
+	 * find(lt("field1", 100), sort).then(res -&gt; {
+	 * 	// Find operation finished
+	 * });
+	 * </pre>
+	 * 
+	 * @param filter
+	 *            the query filter
+	 * @param sort
+	 *            sort filter (or null)
+	 * @return a Promise with the selected documents and the max number of
+	 *         selectable documents.
+	 */
+	protected Promise find(Tree filter, Tree sort) {
+		return find(filter, sort, 0, maxItemsPerQuery);
+	}
+
+	/**
 	 * Queries the specified number of records from the collection. Sample of
 	 * usage:
 	 * 
 	 * <pre>
-	 * find(eq("field1", 123), null, 0, 10).then(res -&gt; {
+	 * Tree sort = new Tree();
+	 * sort.put("field2", 1);
+	 * find(lte("field1", 123), null, 0, 10).then(res -&gt; {
 	 * 
 	 * 	// Find operation finished
 	 * 	int maxNumberOfSelectableDocuments = res.get("count");

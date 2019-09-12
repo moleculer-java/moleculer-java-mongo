@@ -14,7 +14,7 @@ This project is currently in "work in progress" status.
 
 ## Methods
 
-**DROP COLLECTION**
+### Drop collection
 
 Drops this collection from the Database.
 
@@ -32,7 +32,7 @@ drop().then(res -> {
 });
 ```
 
-**RENAME COLLECTION**
+### Rename collection
 
 Rename the collection.
 
@@ -44,7 +44,7 @@ renameCollection("db", "collection").then(res -> {
 });
 ```
 
-**CREATE INDEXES**
+### Create indexes
 
 Creates ascending/descending/2dsphere/hash/text/etc. indexes.
 
@@ -56,7 +56,7 @@ createAscendingIndexes("field1", "field2").then(res -> {
 });
 ```
 
-**LIST INDEXES**
+### List indexes
 
 Get all the indexes in this collection.
 
@@ -73,7 +73,7 @@ listIndexes().then(res -> {
 });
 ```
 
-**INSERT ONE DOCUMENT**
+### Insert one document
 
 Inserts the provided document. If the document is missing an identifier, the driver should generate one.
 
@@ -91,7 +91,7 @@ insertOne(doc).then(res -> {
 });
 ```
 
-**REPLACE ONE DOCUMENT**
+### Replace one document
 
 Replace a document in the collection according to the specified arguments.
 
@@ -108,7 +108,7 @@ replaceOne(eq("field1", 123), replacement).then(res -> {
 });
 ```
 
-**UPDATE ONE DOCUMENT**
+### Update one document
 
 Update a single document in the collection according to the specified arguments.
 
@@ -125,7 +125,7 @@ updateOne(eq("field1", 123), update).then(res -> {
 });
 ```
 
-**UPDATE MANY DOCUMENTS**
+### Update many documents
 
 Update all documents in the collection according to the specified arguments.
 
@@ -142,7 +142,7 @@ updateMany(eq("field1", 123), update).then(res -> {
 });
 ```
 
-**DELETE ONE DOCUMENT**
+### Delete one document
 
 Removes at most one document from the collection that matches the given filter. If no documents match, the collection is not modified.
 
@@ -156,7 +156,21 @@ deleteOne(eq("field1", 123)).then(res -> {
 });
 ```
 
-**DELETE MANY DOCUMENTS**
+### Delete all documents
+
+Removes all documents from the collection.
+
+```java
+deleteAll().then(res -&gt; {
+
+ // Delete operation finished
+ int deleted = res.get("deleted");
+ return deleted > 0;
+	 
+});
+```
+
+### Delete many documents
 
 Removes all documents from the collection that match the given query filter. If no documents match, the collection is not modified.
 
@@ -170,7 +184,7 @@ deleteMany(eq("field1", 123)).then(res -> {
 });
 ```
 
-**COUNT DOCUMENTS**
+### Count documents
 
 Counts the number of documents in the collection according to the given filters.
 
@@ -184,7 +198,7 @@ count(eq("field1", 123)).then(res -> {
 });
 ```
 
-**FIND ONE DOCUMENT**
+### Find one document
 
 Finds one document by the specified query filter.
 
@@ -201,7 +215,7 @@ findOne(eq("field1", 123)).then(res -> {
 });
 ```
 
-**FIND MANY DOCUMENTS**
+### Find many documents
 
 Queries the specified number of records from the collection.
 
@@ -218,7 +232,7 @@ find(eq("field1", 123), null, 0, 10).then(res -> {
 });
 ```
 
-**FIND ONE AND DELETE**
+### Find one and delete
 
 Atomically find a document and remove it.
 
@@ -235,7 +249,7 @@ findOneAndDelete(eq("field1", 123)).then(res -> {
 });
 ```
 
-**FIND ONE AND REPLACE**
+### Find one and replace
 
 Atomically find a document and replace it.
 
@@ -255,7 +269,7 @@ findOneAndReplace(eq("field1", 123), replacement).then(res -> {
 });
 ```
 
-**FIND ONE AND UPDATE**
+### Find one and update
 
 Atomically find a document and update it.
 
@@ -275,13 +289,13 @@ findOneAndUpdate(eq("field1", 123), update).then(res -> {
 });
 ```
 
-**MAP/REDUCE**
+### Map/Reduce
 
 Aggregates documents according to the specified map-reduce function.
 
 ```java
-String mapFunction = "...";
-String reduceFunction = "...";
+String mapFunction = "...";    // JavaScript
+String reduceFunction = "..."; // JavaScript
 mapReduce(mapFunction, reduceFunction).then(res -> {
 
  // Operation finished
