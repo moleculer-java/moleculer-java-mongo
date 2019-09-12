@@ -161,7 +161,7 @@ deleteOne(eq("field1", 123)).then(res -> {
 Removes all documents from the collection.
 
 ```java
-deleteAll().then(res -&gt; {
+deleteAll().then(res -> {
 
  // Delete operation finished
  int deleted = res.get("deleted");
