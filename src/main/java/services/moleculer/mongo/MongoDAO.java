@@ -50,8 +50,9 @@ import io.datatree.Promise;
 import io.datatree.Tree;
 
 /**
- * Superclass of all Mongo handlers. Sample DAO class for handling "User"
- * entities:
+ * Superclass of all Mongo handlers. If it used with Spring Framework, the DAO
+ * classes must be annotated with the @Repository or @Component annotation.
+ * Sample DAO class for handling "User" entities:
  * 
  * <pre>
  * &#64;MongoCollection("user")
@@ -1137,16 +1138,16 @@ public class MongoDAO extends MongoFilters {
 		find.limit(l);
 
 		// Get rows and size
-		return collectAll(find).then(rows -> {
+		return collectAll(find).then(res -> {
 			if (countFilter == null) {
 				return singleResult(collection.countDocuments()).thenWithResult(max -> {
-					rows.put(COUNT, max);
-					return rows;
+					res.put(COUNT, max);
+					return res;
 				});
 			}
 			return singleResult(collection.countDocuments(countFilter)).thenWithResult(max -> {
-				rows.put(COUNT, max);
-				return rows;
+				res.put(COUNT, max);
+				return res;
 			});
 		});
 	}

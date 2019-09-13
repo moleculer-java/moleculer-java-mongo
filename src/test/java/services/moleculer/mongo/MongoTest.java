@@ -463,6 +463,70 @@ public class MongoTest extends TestCase {
 		checkType(filters.mod("X", 0, 0).asObject(), Filters.mod("", 0, 0));
 		checkType(filters.near("X", new Point(new Position(0, 0)), 0d, 0d).asObject(), Filters.near("", emptyBson(), 0d, 0d));
 		checkType(filters.size("X", 0).asObject(), Filters.size("", 0));
+		
+		// Lists with offsets
+		testDAO.setMaxItemsPerQuery(1000);
+		testDAO.drop();
+		createTable();
+		filter = filters.gte("a", 0);
+		sort = new Tree("{\"a\":1}");
+		rsp = testDAO.find(null, sort, 0, 1000).waitFor(2000);
+		printRsp(rsp, "find-1");
+		assertEquals(10, rsp.get("rows").size());
+		assertEquals(0, rsp.get("rows[0].a", -1));
+		assertEquals(10, rsp.get("count", -1));
+		
+		rsp = testDAO.find(null, sort, 1, 1000).waitFor(2000);
+		printRsp(rsp, "find-2");
+		assertEquals(9, rsp.get("rows").size());
+		assertEquals(1, rsp.get("rows[0].a", -1));
+		assertEquals(10, rsp.get("count", -1));
+		
+		rsp = testDAO.find(null, sort, 1, 5).waitFor(2000);
+		printRsp(rsp, "find-3");
+		assertEquals(5, rsp.get("rows").size());
+		assertEquals(1, rsp.get("rows[0].a", -1));
+		assertEquals(10, rsp.get("count", -1));
+		
+		rsp = testDAO.find(null, sort, 5, 5).waitFor(2000);
+		printRsp(rsp, "find-4");
+		assertEquals(5, rsp.get("rows").size());
+		assertEquals(5, rsp.get("rows[0].a", -1));
+		assertEquals(10, rsp.get("count", -1));
+
+		rsp = testDAO.find(null, sort, 5, -1).waitFor(2000);
+		printRsp(rsp, "find-4");
+		assertEquals(5, rsp.get("rows").size());
+		assertEquals(5, rsp.get("rows[0].a", -1));
+		assertEquals(10, rsp.get("count", -1));
+
+		rsp = testDAO.find(null, sort, 5, 3).waitFor(2000);
+		printRsp(rsp, "find-4");
+		assertEquals(3, rsp.get("rows").size());
+		assertEquals(5, rsp.get("rows[0].a", -1));
+		assertEquals(10, rsp.get("count", -1));
+		
+		rsp = testDAO.find(null, sort, 6, 5).waitFor(2000);
+		printRsp(rsp, "find-5");
+		assertEquals(4, rsp.get("rows").size());
+		assertEquals(6, rsp.get("rows[0].a", -1));
+		assertEquals(10, rsp.get("count", -1));
+		
+		rsp = testDAO.find(null, sort, 9, 5).waitFor(2000);
+		printRsp(rsp, "find-6");
+		assertEquals(1, rsp.get("rows").size());
+		assertEquals(9, rsp.get("rows[0].a", -1));
+		assertEquals(10, rsp.get("count", -1));
+		
+		rsp = testDAO.find(null, sort, 10, 5).waitFor(2000);
+		printRsp(rsp, "find-7");
+		assertEquals(0, rsp.get("rows").size());
+		assertEquals(10, rsp.get("count", -1));
+		
+		rsp = testDAO.find(null, sort, 100, 100).waitFor(2000);
+		printRsp(rsp, "find-7");
+		assertEquals(0, rsp.get("rows").size());
+		assertEquals(10, rsp.get("count", -1));
 	}
 
 	protected void checkType(Object o1, Object o2) {
