@@ -26,19 +26,27 @@
 package services.moleculer.mongo;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import org.junit.Test;
 
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.DropIndexOptions;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.InsertOneOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.TextSearchOptions;
+import com.mongodb.client.model.geojson.Point;
+import com.mongodb.client.model.geojson.Position;
 
 import io.datatree.Promise;
 import io.datatree.Tree;
@@ -399,7 +407,7 @@ public class MongoTest extends TestCase {
 		assertEquals(0, rsp.get("a", 1));
 		assertEquals("ZZ", rsp.get("d", ""));
 		assertEquals(5, rsp.size());
-		
+
 		// Set max items per query
 		createTable();
 		testDAO.setMaxItemsPerQuery(5);
@@ -413,15 +421,62 @@ public class MongoTest extends TestCase {
 		rsp = testDAO.find(null).waitFor(2000);
 		assertEquals(10, rsp.get("count", 0));
 		assertEquals(3, rsp.get("rows").size());
-		
+
 		rsp = testDAO.find(null, null, 2, 0).waitFor(2000);
 		assertEquals(10, rsp.get("count", 0));
-		assertEquals(3, rsp.get("rows").size());	
-		
+		assertEquals(3, rsp.get("rows").size());
+
 		// Collection name test
 		XyzDAO xyz = new XyzDAO();
 		xyz.setMongoConnectionPool(pool);
 		assertEquals("xyz", xyz.collection.getNamespace().getCollectionName());
+
+		// Check filter classes
+		checkType(filters.or(emptyTree()).asObject(), Filters.or(emptyBson()));
+		checkType(filters.and(emptyTree()).asObject(), Filters.and(emptyBson()));
+		checkType(filters.all("X", 1).asObject(), Filters.all("", emptyBson()));
+		checkType(filters.nor(emptyTree()).asObject(), Filters.nor(emptyBson()));
+		checkType(filters.not(emptyTree()).asObject(), Filters.not(emptyBson()));
+		checkType(filters.eq(ObjectId.get().toHexString()).asObject(), Filters.eq(emptyBson()));
+		checkType(filters.eq("X", 1).asObject(), Filters.eq(emptyBson()));
+		checkType(filters.ne("X", 1).asObject(), Filters.ne("", emptyBson()));
+		checkType(filters.in("X", 1).asObject(), Filters.in("", emptyBson()));
+		checkType(filters.nin("X", 1).asObject(), Filters.nin("", emptyBson()));
+		checkType(filters.lt("X", 1).asObject(), Filters.lt("", emptyBson()));
+		checkType(filters.lte("X", 1).asObject(), Filters.lte("", emptyBson()));
+		checkType(filters.gt("X", 1).asObject(), Filters.gt("", emptyBson()));
+		checkType(filters.gte("X", 1).asObject(), Filters.gte("", emptyBson()));
+		checkType(filters.exists("X").asObject(), Filters.exists("", true));
+		checkType(filters.notExists("X").asObject(), Filters.exists("", true));
+		checkType(filters.regex("X", "").asObject(), Filters.regex("", ""));
+		checkType(filters.regex("X", "", "").asObject(), Filters.regex("", ""));
+		checkType(filters.where("").asObject(), Filters.where(""));
+		checkType(filters.elemMatch("X", emptyTree()).asObject(), Filters.elemMatch("", emptyBson()));
+		checkType(filters.expr(emptyTree()).asObject(), Filters.expr(emptyBson()));
+		checkType(filters.text("").asObject(), Filters.text(""));
+		checkType(filters.text("", new TextSearchOptions()).asObject(), Filters.text(""));
+		checkType(filters.geoIntersects("X", new Point(new Position(0, 0))).asObject(), Filters.geoIntersects("", emptyBson()));
+		checkType(filters.geoWithin("X", new Point(new Position(0, 0))).asObject(), Filters.geoWithin("", emptyBson()));
+		checkType(filters.geoWithinBox("X", 0, 0, 0, 0).asObject(), Filters.geoWithinBox("", 0, 0, 0, 0));
+		checkType(filters.geoWithinCenter("X", 0, 0, 0).asObject(), Filters.geoWithinCenter("", 0, 0, 0));
+		checkType(filters.geoWithinPolygon("X", new LinkedList<List<Double>>()).asObject(), Filters.geoWithinPolygon("", new LinkedList<List<Double>>()));
+		checkType(filters.mod("X", 0, 0).asObject(), Filters.mod("", 0, 0));
+		checkType(filters.near("X", new Point(new Position(0, 0)), 0d, 0d).asObject(), Filters.near("", emptyBson(), 0d, 0d));
+		checkType(filters.size("X", 0).asObject(), Filters.size("", 0));
+	}
+
+	protected void checkType(Object o1, Object o2) {
+		Class<?> c1 = o1.getClass();
+		Class<?> c2 = o2.getClass();
+		assertEquals(c1, c2);
+	}
+	
+	protected Bson emptyBson() {
+		return new Document();
+	}
+
+	protected Tree emptyTree() {
+		return new Tree();
 	}
 
 	protected void assertSize(int requiredSize) throws Exception {

@@ -358,7 +358,7 @@ public class MongoFilters {
 	 *            the aggregation expression
 	 * @return the filter
 	 */
-	protected Tree elemMatch(Tree expression) {
+	protected Tree expr(Tree expression) {
 		return createFilter(Filters.expr(toBson(expression)));
 	}
 
