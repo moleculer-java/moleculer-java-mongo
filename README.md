@@ -11,6 +11,29 @@ specially designed for Java-based
 [Moleculer](https://github.com/moleculer-java/moleculer-java)
 ecosystem. The API can be conveniently used with the Spring Framework (but it works without Spring).
 
+## Download
+
+**Maven**
+
+```xml
+<dependencies>
+	<dependency>
+		<groupId>com.github.berkesa</groupId>
+		<artifactId>moleculer-java-mongo</artifactId>
+		<version>1.0.0</version>
+		<scope>runtime</scope>
+	</dependency>
+</dependencies>
+```
+
+**Gradle**
+
+```gradle
+dependencies {
+	compile group: 'com.github.berkesa', name: 'moleculer-java-mongo', version: '1.0.0' 
+}
+```
+
 ## Usage without Spring Framework
 
 The key Superclass is the "MongoDAO". All DAO objects are inherited from this Class.
@@ -168,8 +191,8 @@ public class UserDAO extends SpringMongoDAO {
 }
 ```
 
-Such DAOs can be used like any other Spring Bean,
-with the Autowired annotation any other Spring Bean can refer to it:
+MongoDAOs can be used like any other Spring Beans,
+with the "Autowired" annotation any other Spring Bean can refer to them:
 
 ```java
 @Autowired
@@ -219,7 +242,7 @@ The REST part (the "HttpAlias" annotation) is optional in the code above.
 However, if you want to build REST services, you'll need the
 [moleculer-java-web](https://github.com/moleculer-java/moleculer-java-web)
 dependency. From another
-[moleculer-java](https://github.com/moleculer-java/moleculer-java)
+[Moleculer](https://github.com/moleculer-java/moleculer-java)
 service (even from another host) you can
 use the service above with the following code:
 
@@ -240,7 +263,27 @@ broker.call("user.create",
 		    	  
       });
 ```
-		      
+
+### Parallel processing
+
+Parallel queries make sense when using clustered MongoDB.
+If the queries are independent, they can be started at the same time.
+The "Promise.all" function waits for all replies to be received:
+
+```java
+Promise p1 = userDAO.getUserByEmail(email);
+Promise p2 = roleDAO.getRolesByEmail(email);
+Promise p3 = roleDAO.getPostsByEmail(email);
+
+Promise.all(p1, p2, p3).then(rsp -> {
+
+  Tree users = rsp.get(0);
+  Tree roles = rsp.get(1);
+  Tree posts = rsp.get(2);
+  
+})
+```
+
 ## Methods of the MongoDAO / SpringMongoDAO
 
 ### Drop collection
@@ -508,17 +551,19 @@ The answer (the "res" JSON) will be similar to the following structure:
 
 ```json
 {
-  "count":10345, // Max number of rows which meets the "filter" condition
+  "count":10345,
   "rows":[
     {
       "firstName": "Tom",
       "lastName":  "Smith",
       "email":     "tom.smith@company.com"
-    }
-    ... array of the retrieved rows/documents ...
+    }    
   ]
 }
 ```
+
+The "count" field contains the max number of rows which meets the "filter" condition
+(can be much more than the number of records in the "rows" structure).
 
 ### Find one and delete
 
