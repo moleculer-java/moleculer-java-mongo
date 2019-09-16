@@ -8,7 +8,7 @@
 
 The "moleculer-java-mongo" is an asynchronous MongoDB API,
 specially designed for Java-based
-[Moleculer](https://github.com/moleculer-java/moleculer-java)
+[Moleculer](https://moleculer-java.github.io/moleculer-java/)
 ecosystem. The API can be conveniently used with the Spring Framework (but it works without Spring).
 
 ## Download
