@@ -73,7 +73,7 @@ import io.datatree.Tree;
  *
  * 	public Promise deleteUserById(String id) {
  * 		return deleteOne(eq(id)).then(res -&gt; {
- * 			return res.get("deleted", 0) > 0;
+ * 			return res.get("deleted", 0) &gt; 0;
  * 		});
  * 	}
  * 
@@ -571,7 +571,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * 	// Replace operation finished
 	 * 	int modified = res.get("modified");
-	 * 	return modified > 0;
+	 * 	return modified &gt; 0;
 	 * 
 	 * }).then(res -&gt; {
 	 * 	// ...
@@ -621,7 +621,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * 	// Replace operation finished
 	 * 	int modified = res.get("modified");
-	 * 	return modified > 0;
+	 * 	return modified &gt; 0;
 	 * 
 	 * });
 	 * </pre>
@@ -666,7 +666,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * 	// Replace operation finished
 	 * 	int modified = res.get("modified");
-	 * 	return modified > 0;
+	 * 	return modified &gt; 0;
 	 * 
 	 * }).then(res -&gt; {
 	 * 	// ...
@@ -716,7 +716,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * 	// Replace operation finished
 	 * 	int modified = res.get("modified");
-	 * 	return modified > 0;
+	 * 	return modified &gt; 0;
 	 * 
 	 * });
 	 * </pre>
@@ -756,7 +756,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * 	// Delete operation finished
 	 * 	int deleted = res.get("deleted");
-	 * 	return deleted > 0;
+	 * 	return deleted &gt; 0;
 	 * 
 	 * });
 	 * </pre>
@@ -793,7 +793,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 *  // Delete operation finished
 	 *  int deleted = res.get("deleted");
-	 *  return deleted > 0;
+	 *  return deleted &gt; 0;
 	 *  
 	 * });
 	 * </pre>
@@ -830,7 +830,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * 	// Delete operation finished
 	 * 	int deleted = res.get("deleted");
-	 * 	return deleted > 0;
+	 * 	return deleted &gt; 0;
 	 * 
 	 * });
 	 * </pre>
@@ -862,7 +862,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 * 	// Delete operation finished
 	 * 	int deleted = res.get("deleted");
-	 * 	return deleted > 0;
+	 * 	return deleted &gt; 0;
 	 * 
 	 * });
 	 * </pre>
@@ -899,7 +899,7 @@ public class MongoDAO extends MongoFilters {
 	 * 
 	 *  // Delete operation finished
 	 *  int deleted = res.get("deleted");
-	 *  return deleted > 0;
+	 *  return deleted &gt; 0;
 	 *  
 	 * }).then(res -&gt; {
 	 *  // ...
@@ -1433,6 +1433,14 @@ public class MongoDAO extends MongoFilters {
 
 	public final void setMaxItemsPerQuery(int maxItemsPerQuery) {
 		this.maxItemsPerQuery = maxItemsPerQuery;
+	}
+
+	public final MongoCollection<Document> getCollection() {
+		return collection;
+	}
+
+	public final void setCollection(MongoCollection<Document> collection) {
+		this.collection = collection;
 	}
 
 }

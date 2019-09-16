@@ -33,17 +33,19 @@ import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
+import io.datatree.Tree;
+
 /**
  * Connection Pool for MongoDB. <br>
  * <br>
- * Init method: started()<br>
- * Destroy method: stopped()
+ * Init method: init()<br>
+ * Destroy method: destroy()
  */
 public class MongoConnectionPool {
 
 	// --- LOGGER ---
 
-	protected static final Logger log = LoggerFactory.getLogger(MongoConnectionPool.class);
+	protected static final Logger logger = LoggerFactory.getLogger(MongoConnectionPool.class);
 
 	// --- CONECTION ---
 
@@ -54,36 +56,50 @@ public class MongoConnectionPool {
 
 	protected String connectionString;
 	protected String database = "db";
+	protected long connectionTimeout = 3000;
 
 	// --- OPEN CONNECTION ---
 
-	public void started() throws Exception {
+	public void init() throws Exception {
 
 		// Release resources
-		closeResources();
+		closeResources(false);
 
 		// Build connection
 		if (connectionString == null) {
-			log.info("Opening \"" + database + "\" database at localhost...");
+			logger.info("Opening \"" + database + "\" database at localhost...");
 			mongoClient = MongoClients.create();
 		} else {
-			log.info("Opening \"" + database + "\" database at " + connectionString + "...");
-			mongoClient = MongoClients.create(new ConnectionString(connectionString));
+			logger.info("Opening \"" + database + "\" database at " + connectionString + "...");
+			ConnectionString cs = new ConnectionString(connectionString);
+			mongoClient = MongoClients.create(cs);
 		}
 
+		// Check connection
+		CollectAllPromise<String> databaseNames = new CollectAllPromise<>(mongoClient.listDatabaseNames());
+		Tree collected = databaseNames.waitFor(connectionTimeout);
+		logger.info("Databases available: " + collected.get(MongoDAO.ROWS).asList(String.class));
+		
 		// Open database
-		mongoDatabase = mongoClient.getDatabase(database);
+		mongoDatabase = mongoClient.getDatabase(database);		
 	}
 
-	public void stopped() throws Exception {
-		closeResources();
+	public void destroy() throws Exception {
+		closeResources(true);
 	}
 
-	protected void closeResources() {
+	@Override
+	protected void finalize() throws Throwable {
+		closeResources(false);
+	}
+	
+	protected void closeResources(boolean writeLog) {
 
 		// Close connection
 		if (mongoClient != null) {
-			log.info("Closing \"" + database + "\" database...");
+			if (writeLog) {
+				logger.info("Closing \"" + database + "\" database...");
+			}
 			try {
 				mongoClient.close();
 			} catch (Throwable ignored) {
@@ -112,6 +128,14 @@ public class MongoConnectionPool {
 
 	public void setDatabase(String database) {
 		this.database = database;
+	}
+
+	public final long getConnectionTimeout() {
+		return connectionTimeout;
+	}
+
+	public final void setConnectionTimeout(long connectionTimeout) {
+		this.connectionTimeout = connectionTimeout;
 	}
 
 }

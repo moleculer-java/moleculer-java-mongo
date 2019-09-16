@@ -61,12 +61,23 @@ public class MongoTest extends TestCase {
 	@Override
 	protected void setUp() throws Exception {
 		pool = new MongoConnectionPool();
-		pool.started();
+
+		pool.setDatabase("db2");
+		assertEquals("db2", pool.getDatabase());
+
+		pool.setDatabase("db");
+		assertEquals("db", pool.getDatabase());
+
+		pool.setConnectionTimeout(5000);
+		assertEquals(5000, pool.getConnectionTimeout());
+		
+		pool.init();
+				
 		testDAO = new TestDAO();
 		testDAO.setMongoConnectionPool(pool);
 
 		testDAO.drop().waitFor(2000);
-
+		
 		TestDAO t = new TestDAO();
 		t.setMongoConnectionPool(pool);
 		t.collection = pool.getMongoDatabase().getCollection("newcollection");
@@ -76,7 +87,7 @@ public class MongoTest extends TestCase {
 	@Override
 	protected void tearDown() throws Exception {
 		if (pool != null) {
-			pool.stopped();
+			pool.destroy();
 			pool = null;
 		}
 	}

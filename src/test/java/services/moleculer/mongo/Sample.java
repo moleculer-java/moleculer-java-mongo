@@ -36,7 +36,7 @@ public class Sample {
 
 		MongoConnectionPool pool = new MongoConnectionPool();
 		// pool.setConnectionString("mongodb://mongodb0.example.com:27017");
-		pool.started();
+		pool.init();
 
 		TestDAO userDAO = new TestDAO();
 		userDAO.setMongoConnectionPool(pool);
