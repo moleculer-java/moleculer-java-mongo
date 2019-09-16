@@ -8,12 +8,11 @@
 
 The "moleculer-java-mongo" is an asynchronous MongoDB API,
 specially designed for Java-based Moleculer ecosystem.
-The API can be conveniently used with the Spring Framework.
-This project is currently in "work in progress" status.
+The API can be conveniently used with the Spring Framework (but it works without Spring).
 
 ## Usage without Spring Framework
 
-The key class is "MongoDAO". All DAO objects are inherited from this Class.
+The key Superclass is the "MongoDAO". All DAO objects are inherited from this Class.
 The name of the Mongo Collection can be specified by the annotation "MongoCollection".
 The functions run in non-blocking mode, so all return types are Promise:
 
@@ -47,7 +46,7 @@ public class UserDAO extends MongoDAO {
 }
 ```
 
-The use of the UserDAO is illustrated by the following example:
+The use of the UserDAO is illustrated by the following example (without Spring):
 
 ```java
 public static void main(String[] args) throws Exception {
@@ -131,7 +130,8 @@ When using the Spring Framework, you can create the MongoDB Connection Pool as S
 </bean>
 ```
 
-This case is different from using without Spring Framework in that the DAO classes are inherited from SpringMongoDAO,
+This case is different from using without Spring Framework in that
+the DAO classes are inherited from "SpringMongoDAO",
 and the stereotype of the DAO classes is "Repository":
 
 ```java
@@ -215,8 +215,9 @@ public class UserService extends Service {
 ```
 
 The REST part (the "HttpAlias" annotation) is optional in the code above.
-However, if you want to build REST services, you'll need the following API:  
-https://github.com/moleculer-java/moleculer-java-web
+However, if you want to build REST services, you'll need the
+[moleculer-java-web](https://github.com/moleculer-java/moleculer-java-web)
+dependency.
 
 ## Methods of the MongoDAO / SpringMongoDAO
 
@@ -279,6 +280,27 @@ listIndexes().then(res -> {
 });
 ```
 
+The answer (the "res" JSON) will be similar to the following structure:
+
+```json
+{
+  "count":2,
+  "rows":[
+    {
+      "v":1,
+      "key":{"_id":1},
+      "name":"_id_",
+      "ns":"db.test"
+    }, {
+      "v":1,
+      "key":{"a":1},
+      "name":"a_1",
+      "ns":"db.test"
+    }
+  ]
+}
+```
+
 ### Insert one document
 
 Inserts the provided document. If the document is missing an identifier, the driver should generate one.
@@ -291,6 +313,9 @@ doc.put("field2.subfield", false);
 insertOne(doc).then(res -> {
 
  // Insert operation finished
+ // The "res" is a JSON structure,
+ // with the inserted document + the "_id" field
+ 
  String id = res.get("_id", "");
  return id;
  
@@ -331,6 +356,16 @@ updateOne(eq("field1", 123), update).then(res -> {
 });
 ```
 
+The answer (the "res" JSON) will be similar to the following structure:
+
+```json
+{
+  "matched": 10,
+  "modified": 4,
+  "acknowledged": true
+}
+```
+
 ### Update many documents
 
 Update all documents in the collection according to the specified arguments.
@@ -360,6 +395,15 @@ deleteOne(eq("field1", 123)).then(res -> {
  return deleted > 0;
  
 });
+```
+
+The answer (the "res" JSON) will be similar to the following structure:
+
+```json
+{
+  "deleted": 1,
+  "acknowledged": true
+}
 ```
 
 ### Delete all documents
@@ -438,9 +482,25 @@ find(eq("field1", 123), null, 0, 10).then(res -> {
 });
 ```
 
+The answer (the "res" JSON) will be similar to the following structure:
+
+```json
+{
+  "count":10345, // Max number of rows which meets the "filter" condition
+  "rows":[
+    {
+      "firstName": "Tom",
+      "lastName":  "Smith",
+      "email":     "tom.smith@company.com"
+    }
+    ... array of the retrieved rows/documents ...
+  ]
+}
+```
+
 ### Find one and delete
 
-Atomically find a document and remove it.
+Atomically find a document and remove it. The answer structure is the searched document, or null.
 
 ```java
 findOneAndDelete(eq("field1", 123)).then(res -> {
@@ -457,7 +517,7 @@ findOneAndDelete(eq("field1", 123)).then(res -> {
 
 ### Find one and replace
 
-Atomically find a document and replace it.
+Atomically find a document and replace it. The answer structure is the searched document, or null.
 
 ```java
 Tree replacement = new Tree();
@@ -477,7 +537,7 @@ findOneAndReplace(eq("field1", 123), replacement).then(res -> {
 
 ### Find one and update
 
-Atomically find a document and update it.
+Atomically find a document and update it. The answer structure is the searched document, or null.
 
 ```java
 Tree update = new Tree();
