@@ -7,8 +7,9 @@
 ## Description
 
 The "moleculer-java-mongo" is an asynchronous MongoDB API,
-specially designed for Java-based Moleculer ecosystem.
-The API can be conveniently used with the Spring Framework (but it works without Spring).
+specially designed for Java-based
+[Moleculer](https://github.com/moleculer-java/moleculer-java)
+ecosystem. The API can be conveniently used with the Spring Framework (but it works without Spring).
 
 ## Usage without Spring Framework
 
@@ -217,8 +218,29 @@ public class UserService extends Service {
 The REST part (the "HttpAlias" annotation) is optional in the code above.
 However, if you want to build REST services, you'll need the
 [moleculer-java-web](https://github.com/moleculer-java/moleculer-java-web)
-dependency.
+dependency. From another
+[moleculer-java](https://github.com/moleculer-java/moleculer-java)
+service (even from another host) you can
+use the service above with the following code:
 
+```java
+ServiceBroker broker = ServiceBroker
+                         .builder()
+                         .transporter(new NatsTransporter("nats://host"))
+                         .build();
+
+broker.call("user.create",
+            "firstName", "Tom",
+            "lastName",  "Smith",
+            "email",     "tom.smith@company.com")
+      .then(rsp -> {
+
+          // User created successfully
+          String recordID = rsp.get("_id", "");
+		    	  
+      });
+```
+		      
 ## Methods of the MongoDAO / SpringMongoDAO
 
 ### Drop collection
