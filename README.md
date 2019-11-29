@@ -240,9 +240,9 @@ public class UserService extends Service {
 
 The REST part (the "HttpAlias" annotation) is optional in the code above.
 However, if you want to build REST services, you'll need the
-[moleculer-java-web](https://github.com/moleculer-java/moleculer-java-web)
+[moleculer-java-web](https://moleculer-java.github.io/moleculer-java-web/)
 dependency. From another
-[Moleculer](https://github.com/moleculer-java/moleculer-java)
+[Moleculer](https://moleculer-java.github.io/moleculer-java/)
 service (even from another host) you can
 use the service above with the following code:
 
