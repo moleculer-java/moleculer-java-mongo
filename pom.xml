@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.github.berkesa</groupId>
+	<artifactId>moleculer-java-mongo</artifactId>
+	<version>2.0.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>MongoDB Client for Moleculer Framework</name>
+	<description>Non-blocking, Promise-based MongoDB Client for Moleculer Applications.</description>
+	<url>https://moleculer-java.github.io/moleculer-java-mongo/</url>
+	<inceptionYear>2019</inceptionYear>
+
+	<licenses>
+		<license>
+			<name>The MIT License</name>
+			<url>http://www.opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>berkesa</id>
+			<name>Andras Berkes</name>
+			<email>andras.berkes@programmer.net</email>
+		</developer>
+	</developers>
+
+	<scm>
+		<url>https://github.com/moleculer-java/moleculer-java-mongo</url>
+		<connection>scm:git:https://github.com/moleculer-java/moleculer-java-mongo.git</connection>
+		<developerConnection>scm:git:git://github.com/moleculer-java/moleculer-java-mongo.git</developerConnection>
+	</scm>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<maven.compiler.release>21</maven.compiler.release>
+
+		<!-- Inter-project dependencies (lockstep 2.0.0) -->
+		<moleculer.version>2.0.0-SNAPSHOT</moleculer.version>
+
+		<!-- Shared dependency versions (kept in sync across the workspace) -->
+		<slf4j.version>2.0.18</slf4j.version>
+		<junit.version>5.14.4</junit.version>
+		<spring.version>6.2.8</spring.version>
+
+		<!-- MongoDB reactive streams driver + BSON (bson 5.8.0 is locked
+		     workspace-wide; the driver pulls it transitively, but it is also
+		     pinned here via dependencyManagement to prevent drift). -->
+		<mongodb.version>5.8.0</mongodb.version>
+		<bson.version>5.8.0</bson.version>
+
+		<!-- Reactive Streams SPI - Publisher/Subscriber/Subscription are used
+		     directly by SingleResultPromise / CollectAllPromise. -->
+		<reactive-streams.version>1.0.4</reactive-streams.version>
+
+		<!-- Build plugin versions (lockstep; see DEPENDENCY-MATRIX.md) -->
+		<maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
+		<maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
+		<maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+		<maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
+		<maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+		<central-publishing-plugin.version>0.9.0</central-publishing-plugin.version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+
+			<!-- Align all org.junit.* artifacts -->
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<!-- Pin BSON to the locked workspace-wide version (5.8.0). The
+			     reactive streams driver brings it transitively; this guards
+			     against accidental drift from the lockstep version. -->
+			<dependency>
+				<groupId>org.mongodb</groupId>
+				<artifactId>bson</artifactId>
+				<version>${bson.version}</version>
+			</dependency>
+
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+
+		<!-- ====================== PROMISE API ====================== -->
+
+		<!-- The only workspace dependency; pulls datatree-core transitively.
+		     This module does NOT depend on the moleculer core. -->
+		<dependency>
+			<groupId>com.github.berkesa</groupId>
+			<artifactId>datatree-promise</artifactId>
+			<version>${moleculer.version}</version>
+		</dependency>
+
+		<!-- ====================== MONGODB ====================== -->
+
+		<!-- Official MongoDB reactive streams driver (brings bson + the core
+		     com.mongodb.* / com.mongodb.client.model.* APIs transitively). -->
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-reactivestreams</artifactId>
+			<version>${mongodb.version}</version>
+		</dependency>
+
+		<!-- Reactive Streams SPI - declared explicitly because the two
+		     Subscriber adapters implement Publisher/Subscriber/Subscription
+		     directly. -->
+		<dependency>
+			<groupId>org.reactivestreams</groupId>
+			<artifactId>reactive-streams</artifactId>
+			<version>${reactive-streams.version}</version>
+		</dependency>
+
+		<!-- ====================== LOGGING ====================== -->
+
+		<!-- SLF4J API (compile) -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+
+		<!-- SLF4J bindings / bridges (runtime only) -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-jdk14</artifactId>
+			<version>${slf4j.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<version>${slf4j.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>${slf4j.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- ====================== SPRING (OPTIONAL) ====================== -->
+
+		<!-- Used only by SpringMongoDAO (ApplicationContextAware). The library
+		     works standalone, so Spring is optional: non-Spring users do not
+		     pull it transitively. -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>${spring.version}</version>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- ====================== TESTS (JUNIT 5 / JUPITER) ====================== -->
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${maven-surefire-plugin.version}</version>
+				<configuration>
+					<systemPropertyVariables>
+						<java.util.logging.SimpleFormatter.format>%4$-7s %5$s %n</java.util.logging.SimpleFormatter.format>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+
+		</plugins>
+	</build>
+
+	<profiles>
+
+		<!-- Release profile: sources + javadoc + GPG signing + Central Portal publishing -->
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>${maven-source-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>${maven-javadoc-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<doclint>none</doclint>
+						</configuration>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>${maven-gpg-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<version>${central-publishing-plugin.version}</version>
+						<extensions>true</extensions>
+						<configuration>
+							<publishingServerId>central</publishingServerId>
+						</configuration>
+					</plugin>
+
+				</plugins>
+			</build>
+		</profile>
+
+	</profiles>
+
+</project>

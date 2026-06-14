@@ -25,6 +25,14 @@
  */
 package services.moleculer.mongo;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +40,9 @@ import java.util.concurrent.TimeUnit;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
@@ -50,16 +60,22 @@ import com.mongodb.client.model.geojson.Position;
 
 import io.datatree.Promise;
 import io.datatree.Tree;
-import junit.framework.TestCase;
 
-public class MongoTest extends TestCase {
+public class MongoTest {
 
 	protected MongoConnectionPool pool;
 	protected TestDAO testDAO;
 	protected MongoFilters filters = new MongoFilters();
 
-	@Override
+	@BeforeEach
 	protected void setUp() throws Exception {
+
+		// Skip this live integration test if no MongoDB server is reachable on
+		// localhost:27017 (there is no embedded/mock Mongo). The test runs when
+		// a server is up and skips cleanly when it isn't.
+		assumeTrue(isMongoAvailable(),
+				"MongoDB is not reachable on localhost:27017 - skipping live integration test.");
+
 		pool = new MongoConnectionPool();
 
 		pool.setDatabase("db2");
@@ -84,11 +100,27 @@ public class MongoTest extends TestCase {
 		t.drop();
 	}
 
-	@Override
+	@AfterEach
 	protected void tearDown() throws Exception {
 		if (pool != null) {
 			pool.destroy();
 			pool = null;
+		}
+	}
+
+	/**
+	 * Probes whether a MongoDB server is listening on localhost:27017 by
+	 * opening a short-timeout TCP socket. Used by the {@code assumeTrue} guard
+	 * so {@code mvn verify} stays green when no server is available.
+	 *
+	 * @return true if the port accepts a connection within the timeout
+	 */
+	protected static boolean isMongoAvailable() {
+		try (Socket socket = new Socket()) {
+			socket.connect(new InetSocketAddress("127.0.0.1", 27017), 1000);
+			return true;
+		} catch (Exception probeFailed) {
+			return false;
 		}
 	}
 
