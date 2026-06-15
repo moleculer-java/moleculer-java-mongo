@@ -15,7 +15,7 @@ It works standalone or as Spring beans.
 
 ## Build & test commands
 
-Maven build (the legacy Gradle/ECJ toolchain has been removed). Compiles with plain `javac`.
+Maven build. Compiles with plain `javac`.
 
 ```bash
 mvn clean verify             # compile + run all tests (the definition-of-done gate)
