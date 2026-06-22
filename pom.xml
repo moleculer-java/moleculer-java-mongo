@@ -139,18 +139,21 @@
 			<artifactId>slf4j-jdk14</artifactId>
 			<version>${slf4j.version}</version>
 			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>log4j-over-slf4j</artifactId>
 			<version>${slf4j.version}</version>
 			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
 			<version>${slf4j.version}</version>
 			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<!-- ====================== SPRING (OPTIONAL) ====================== -->
