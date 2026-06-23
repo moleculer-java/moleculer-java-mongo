@@ -10,7 +10,9 @@ and exposes a DAO-style API where every operation returns an `io.datatree.Promis
 document/filter is an `io.datatree.Tree` (the DataTree library) instead of raw `Bson`/`Document`.
 It works standalone or as Spring beans.
 
-**Java 21** baseline (`<maven.compiler.release>21</maven.compiler.release>`). Single package:
+Bytecode target **Java 17** (`<maven.compiler.release>17</maven.compiler.release>`). Minimum consumer
+runtime: **JDK 17** (the optional Spring dep is compiled against; non-Spring consumers need JDK 11+
+for the MongoDB driver 5.x). Build JDK 17+ (JDK 25 in use). Single package:
 `services.moleculer.mongo`. Version **2.0.0** (one Maven `<version>`).
 
 ## Build & test commands

@@ -5,7 +5,7 @@ The "moleculer-java-mongo" is an asynchronous
 client, specially designed for Java-based Moleculer Ecosystem.
 The API can be conveniently used with the Spring Framework (but it works without Spring).
 
-Requires **JDK 21**. Built on the official
+Requires **JDK 17**. Built on the official
 [MongoDB Reactive Streams Driver](https://www.mongodb.com/docs/languages/java/reactive-streams-driver/current/) 5.x.
 
 ## Documentation
