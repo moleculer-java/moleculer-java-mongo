@@ -22,7 +22,7 @@ Maven build. Compiles with plain `javac`.
 ```bash
 mvn clean verify             # compile + run all tests (the definition-of-done gate)
 mvn clean test               # run tests only
-mvn clean install            # full build + jar -> local ~/.m2 (output: target/moleculer-java-mongo-2.0.0-SNAPSHOT.jar)
+mvn clean install            # full build + jar -> local ~/.m2 (output: target/moleculer-java-mongo-2.0.0.jar)
 mvn -Prelease -Dgpg.skip=true clean package   # also build sources + javadoc jars
 mvn test -Dtest=MongoTest    # run a single test class
 ```
