@@ -13,7 +13,7 @@ It works standalone or as Spring beans.
 Bytecode target **Java 17** (`<maven.compiler.release>17</maven.compiler.release>`). Minimum consumer
 runtime: **JDK 17** (the optional Spring dep is compiled against; non-Spring consumers need JDK 11+
 for the MongoDB driver 5.x). Build JDK 17+ (JDK 25 in use). Single package:
-`services.moleculer.mongo`. Version **2.0.0** (one Maven `<version>`).
+`services.moleculer.mongo`. Version **2.1.0** (one Maven `<version>`).
 
 ## Build & test commands
 
@@ -22,7 +22,7 @@ Maven build. Compiles with plain `javac`.
 ```bash
 mvn clean verify             # compile + run all tests (the definition-of-done gate)
 mvn clean test               # run tests only
-mvn clean install            # full build + jar -> local ~/.m2 (output: target/moleculer-java-mongo-2.0.0.jar)
+mvn clean install            # full build + jar -> local ~/.m2 (output: target/moleculer-java-mongo-2.1.0.jar)
 mvn -Prelease -Dgpg.skip=true clean package   # also build sources + javadoc jars
 mvn test -Dtest=MongoTest    # run a single test class
 ```
